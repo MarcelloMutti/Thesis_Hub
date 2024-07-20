@@ -1,4 +1,4 @@
-% v1 (testing branch)
+% v1 (master copy)
 
 clear all; close all; clc;
 
@@ -51,8 +51,8 @@ t0=cspice_str2et('2023 JUL 19 12:00:00 UTC');
 % t0=7.385552581849947e+08; % testing
 
 
-% SC_param=[MARGO_param(1); m0]; % [kg*km/s^2, km/s, kg]
-SC_param=[800e-6 3120*9.80665e-3 1000];
+SC_param=[MARGO_param(1); m0]; % [kg*km/s^2, km/s, kg]
+% SC_param=[800e-6 3120*9.80665e-3 1000]; % testing
 
 x0=[SEL2_ND(t0); m0];
 
@@ -65,8 +65,8 @@ l0_g=ACT(x0_ad,SC_param_ad);
 % y0=[x0_ad; l0_g];
 
 % odeopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
-% LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
-% TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
+LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
+TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
 tf=cspice_str2et('2024 SEP 19 23:31:00 UTC');
 % tf=7.507871536279893e+08; % testing
@@ -80,14 +80,21 @@ tf=cspice_str2et('2024 SEP 19 23:31:00 UTC');
 % yf=yy(end,:).';
 % 
 % xtf=cspice_spkezr('3054374',tf,'ECLIPJ2000','NONE','Sun');
-
+%
 % df=zeros(8,1);
 
-Df=TO_ZFP([l0_g; tf],t0,SC_param);
+% Df=TO_ZFP([l0_g; tf],t0,SC_param);
 
 % xtf_ad=ADIM([xtf; 1],SC_param);
 % 
 % % df(1:6)=;
+fsopt=optimoptions('fsolve','Display','iter-detailed');
+
+lltf=fsolve(@(llt) TO_ZFP(llt,t0,SC_param),[l0_g; tf],fsopt);
+
+disp([l0_g lltf(1:7)])
+disp([tf lltf(8)])
+disp(TO_ZFP(lltf,t0,SC_param))
 
 
 cspice_kclear();
