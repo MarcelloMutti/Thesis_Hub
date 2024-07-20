@@ -1,6 +1,8 @@
 function [dy] = TwBP_EL(~, y, u, sc_param)
 % v1 (master)
 
+% adimensional dynamics
+
     rr=y(1:3);
     vv=y(4:6);
     m=y(7);

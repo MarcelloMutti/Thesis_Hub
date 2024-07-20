@@ -1,6 +1,8 @@
 function [ll0] = ACT(x0, sc_param)
 % v1 (master)
 
+% adimensional input
+
     rr=x0(1:3);
     vv=x0(4:6);
     m=x0(7);

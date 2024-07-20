@@ -1,4 +1,6 @@
 function [ad_x, ad_sc_param] = ADIM(x,sc_param)
+% v1 (master)
+
 % dimensional inputs
 % adimensionalized outputs
 % x [km, km/s]
