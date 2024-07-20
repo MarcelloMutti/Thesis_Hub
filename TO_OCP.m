@@ -67,4 +67,7 @@ disp([l0_g lltf(1:7)])
 disp([tf lltf(8)])
 disp(TO_ZFP(lltf,t0,SC_param))
 
+
+plots(lltf,t0,SC_param);
+
 cspice_kclear();
