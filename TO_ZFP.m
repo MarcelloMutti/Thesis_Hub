@@ -1,4 +1,4 @@
-function [df] = TO_ZFP(llt,t0,sc_param)
+function [df] = TO_ZFP(llt,t0,sc_param,targ)
 
 % testing branch
 % dimensional input (but costates)
@@ -12,7 +12,7 @@ function [df] = TO_ZFP(llt,t0,sc_param)
     u=1;
 
     l0_g=llt(1:7);
-    tf=llt(8);
+    tf=llt(8);  % dimensional
 
     x0=[SEL2_ND(t0); sc_param(3)];
 %     x0=[cspice_spkezr('Earth',t0,'ECLIPJ2000','NONE','Sun'); sc_param(3)]; % testing
@@ -35,24 +35,28 @@ function [df] = TO_ZFP(llt,t0,sc_param)
 
     Hf=dot([llrf; llvf; lmf],ffx);
 
-    xtf=cspice_spkezr('3054374',tf,'ECLIPJ2000','NONE','Sun');
+    xtf=cspice_spkezr(targ,tf,'ECLIPJ2000','NONE','Sun');
 %     xtf=cspice_spkezr('Venus',tf,'ECLIPJ2000','NONE','Sun'); % testing
 
-    rrtf=xtf(1:3);
-    vvtf=xtf(4:6);
-    aatf=-rrtf./norm(rrtf)^3;
+    %--seems correct up to here--
+
+%     rrtf=xtf(1:3);
+%     vvtf=xtf(4:6);
+%     aatf=-rrtf./norm(rrtf)^3;
 
     xtf_ad=ADIM([xtf; 1],sc_param);
     rvtf=xtf_ad(1:6);
 
-    Om=Hf+1-dot(llrf,vvtf)-dot(llvf,aatf);
+    rrtf=xtf_ad(1:3);
+    vvtf=xtf_ad(4:6);
+    aatf=-rrtf./norm(rrtf)^3;
+
+    Om=Hf+1-dot([llrf; llvf],[vvtf; aatf]);
 
     df=zeros(8,1);
     df(1:6)=rvf-rvtf;
     df(7)=lmf;
     df(8)=Om;   
 
-
-   
 end
 

@@ -1,10 +1,10 @@
-function plots(llt,t0,sc_param)
+function plots(llt,t0,sc_param,targ)
 
 % testing branch
 % dimensional input (but costates)
 % adimensional output
 
-    odeopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
+    odeopt=odeset('RelTol',1e-13,'AbsTol',1e-13);
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -22,25 +22,33 @@ function plots(llt,t0,sc_param)
 
     [tt, yy]=ode78(@(t,y) TwBP_EL(t,y,u,sc_param_ad),[0 (tf-t0)/TU],y0,odeopt);
 
-    plot3D(yy);
+    plot3D(t0,tt,yy,targ);
 
     S=SwFun(tt,yy,sc_param_ad);
     H=Hamil(tt,yy,sc_param_ad);
 
     figure
-    subplot(3,1,1)
-    plot(S)
+    subplot(4,1,1)
+    plot(tt,S)
     legend('S')
     grid on
     grid minor
-    subplot(3,1,3)
-    plot(H)
-    legend('H')
+
+    subplot(4,1,2)
+    plot(tt,1.*(S<0)+0)
+    legend('u')
     grid on
     grid minor
-    subplot(3,1,2)
-    plot(yy(:,7))
+    
+    subplot(4,1,3)
+    plot(tt,yy(:,7))
     legend('m')
+    grid on
+    grid minor
+
+    subplot(4,1,4)
+    plot(tt,H)
+    legend('H')
     grid on
     grid minor
 end
