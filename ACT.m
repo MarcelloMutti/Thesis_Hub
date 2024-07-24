@@ -1,7 +1,12 @@
-function [ll0] = ACT(x0, sc_param)
+function [ll0] = ACT(t0, sc_param)
 % v1 (master)
 
-% adimensional input
+% dimensional input
+    
+    m0=sc_param(3);
+    x0d=[SEL2_ND(t0); m0];
+    
+    [x0, sc_param_ad]=ADIM(x0d,sc_param);
 
     rr=x0(1:3);
     vv=x0(4:6);
@@ -21,8 +26,8 @@ function [ll0] = ACT(x0, sc_param)
     lm=1;
 %     lm=unifrnd(0,1);
 
-    T=sc_param(1);
-    c=sc_param(2);
+    T=sc_param_ad(1);
+    c=sc_param_ad(2);
     u=1;
 
     uup=[cos(a)*cos(b);
