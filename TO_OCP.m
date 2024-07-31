@@ -44,17 +44,20 @@ fprintf('\nTOTAL kernels number: %d\n', cspice_ktotal('ALL'));
 
 %-shooting problem set up--------------------------------------------------
 
+t_wo=cspice_str2et('2022-12-31 12:00 UTC'); % [8400.5 mjd2000]
+t_wc=cspice_str2et('2027-12-31 12:00 UTC'); % [10226.5 mjd2000]
+
 m0=22.3; % [kg]
-t0=MJD20002et(8600); % [mjd2000]
-targ='3550232';
+t0=MJD20002et(8400); % [mjd2000]
+targ='3568303';
 
-ToF_g=320; %[d]
+ToF_g=550; %[d]
 
-% 3702319  2014 YD  
-% 3550232  2010 UE51
-% 3568303  2011 MD    
-% 3054374  2000 SG344
-% 20478784 2012 UV136
+% 3702319  2014 YD    [683]
+% 3550232  2010 UE51  [390]
+% 3568303  2011 MD    [490]
+% 3054374  2000 SG344 [535]
+% 20478784 2012 UV136 [335]
 
 %--------------------------------------------------------------------------
 
@@ -62,28 +65,29 @@ SC_param=[MARGO_param(1); m0]; % [kg*km/s^2, km/s, kg]
 
 l0_g=ACT(t0,SC_param);
 
-LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
-TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
-
 tf_g=t0+ToF_g*86400;
 
 fsopt=optimoptions('fsolve','Display','iter-detailed','MaxIterations',1e5,'MaxFunctionEvaluations',1e5);
 
-lltf_TO=fsolve(@(llt) TO_ZFP(llt,t0,SC_param,targ),[l0_g; tf_g],fsopt);
+% lltf_TO=fsolve(@(llt) TO_ZFP(llt,t0,SC_param,targ),[l0_g; tf_g],fsopt);
+% 
+% ll_TO=lltf_TO(1:7);
+% tf_TO=lltf_TO(8);
 
-ll_TO=lltf_TO(1:7);
-tf_TO=lltf_TO(8);
+[m,lltf,dt]=TO_TCONTk(t0,SC_param,targ);
 
-DispRes(ll_TO,[t0 tf_TO],SC_param,targ,0);
+% DispRes(ll_TO,[t0 tf_TO],SC_param,targ,0);
 
-%-AUX solution attempt-----------------------------------------------------
+DispRes(lltf(1:7,end),[t0 lltf(8,end)],SC_param,targ,0);
 
-% works with gamma=1 @ eps=1, but to be generalized in continuation process
-
-epsilon=1;
-
-ll_AUX=fsolve(@(ll) AUX_ZFP(ll,[t0 tf_TO],SC_param,targ,epsilon),2*epsilon*ll_TO,fsopt);
-
-DispRes(ll_AUX,[t0 tf_TO],SC_param,targ,epsilon);
+% %-AUX solution attempt-----------------------------------------------------
+% 
+% % works with gamma=1 @ eps=1, but to be generalized in continuation process
+% 
+% epsilon=1;
+% 
+% ll_AUX=fsolve(@(ll) AUX_ZFP(ll,[t0 tf_TO],SC_param,targ,epsilon),2*epsilon*ll_TO,fsopt);
+% 
+% DispRes(ll_AUX,[t0 tf_TO],SC_param,targ,epsilon);
 
 % cspice_kclear();

@@ -1,4 +1,4 @@
-function DispRes(ll0,tspan,sc_param,targ,epsilon)
+function [tt,yy,S,H] = DispRes(ll0,tspan,sc_param,targ,epsilon)
 
 % testing branch
 % dimensional input (but costates)
