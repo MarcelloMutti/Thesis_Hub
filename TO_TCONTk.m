@@ -1,5 +1,8 @@
 function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
 
+    LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
+    TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1    
+
     N=25;
     ToF_g0=100;
     m0=100;
@@ -7,7 +10,7 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
     maxFEval=1500;
     maxIt=500;
 
-    fsopt=optimoptions('fsolve','Display','final','FunctionTolerance',1e-12,'MaxFunctionEvaluations',maxFEval,'MaxIterations',maxIt);
+    fsopt=optimoptions('fsolve','Display','iter','FunctionTolerance',1e-12,'MaxFunctionEvaluations',maxFEval,'MaxIterations',maxIt,'SpecifyObjectiveGradient',true);
     m=(m0-1)*(1-cos(linspace(pi/2,0,N)))+1;
 %     m=linspace(m0,1,N);
     sc_param_m=sc_param;
@@ -22,7 +25,7 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
 
         if i==1 % first solution attempt
             ToF_g=ToF_g0;
-            tf_g=t0+ToF_g*86400;
+            tf_g=ToF_g*86400/TU;
 
             ex_flag=0;
             while ex_flag<=0
@@ -45,7 +48,7 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                     l0_g=ACT(t0,sc_param_m);
                 end
 
-                fsopt=optimoptions('fsolve','Display','final','FunctionTolerance',1e-12,'MaxFunctionEvaluations',(f+1)*maxFEval,'MaxIterations',(f+1)*maxIt);
+                fsopt=optimoptions('fsolve','Display','iter','FunctionTolerance',1e-12,'MaxFunctionEvaluations',(f+1)*maxFEval,'MaxIterations',(f+1)*maxIt);
                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,t0,sc_param_m,targ),[l0_g; tf_g],fsopt);
                 f=f+1;
             end
@@ -65,7 +68,7 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                     l0_g=ACT(t0,sc_param_m);
                 end
 
-                fsopt=optimoptions('fsolve','Display','final','FunctionTolerance',1e-12,'MaxFunctionEvaluations',(f+1)*maxFEval,'MaxIterations',(f+1)*maxIt);
+                fsopt=optimoptions('fsolve','Display','iter','FunctionTolerance',1e-12,'MaxFunctionEvaluations',(f+1)*maxFEval,'MaxIterations',(f+1)*maxIt,'SpecifyObjectiveGradient',true);
                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,t0,sc_param_m,targ),[l0_g; tf_g],fsopt);
                 f=f+1;
             end
@@ -91,7 +94,7 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                     l0_g=ACT(t0,sc_param_m);
                 end
 
-                fsopt=optimoptions('fsolve','Display','final','FunctionTolerance',1e-12,'MaxFunctionEvaluations',(f+1)*maxFEval,'MaxIterations',(f+1)*maxIt);
+                fsopt=optimoptions('fsolve','Display','iter','FunctionTolerance',1e-12,'MaxFunctionEvaluations',(f+1)*maxFEval,'MaxIterations',(f+1)*maxIt,'SpecifyObjectiveGradient',true);
                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,t0,sc_param_m,targ),[l0_g; tf_g],fsopt);
                 f=f+1;
                 
