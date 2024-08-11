@@ -1,7 +1,7 @@
-function [tt,yy,S,H] = DispRes(ll0,tspan,sc_param,targ,epsilon)
+function [tt,yy,S,H] = DispRes(lltf,t0,sc_param,targ,epsilon)
 
 % testing branch
-% dimensional input (but costates)
+% dimensional input (but costates and final time)
 % adimensional output
 
     odeopt=odeset('RelTol',1e-13,'AbsTol',1e-13);
@@ -11,8 +11,8 @@ function [tt,yy,S,H] = DispRes(ll0,tspan,sc_param,targ,epsilon)
 
     u=1;
 
-    t0=tspan(1);
-    tf=tspan(2);
+    ll0=lltf(1:7);
+    tf=lltf(8)*TU+t0;
 
     x0=[SEL2_ND(t0); sc_param(3)];
 
@@ -20,7 +20,10 @@ function [tt,yy,S,H] = DispRes(ll0,tspan,sc_param,targ,epsilon)
 
     y0=[x0_ad; ll0];
 
-    [tt, yy]=ode78(@(t,y) TwBP_EL(t,y,u,sc_param_ad),[0 (tf-t0)/TU],y0,odeopt);
+    Phi0=eye(length(y0));
+    vPhi0=reshape(Phi0,[length(y0)^2,1]);
+
+    [tt, yy]=ode78(@(t,y) TwBP_EL(t,y,u,sc_param_ad),[0 (tf-t0)/TU],[y0; vPhi0],odeopt);
 
     ToF=(tf-t0)/86400;
     mf=yy(end,7)*sc_param(3);

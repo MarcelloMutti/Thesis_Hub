@@ -49,9 +49,9 @@ t_wc=cspice_str2et('2027-12-31 12:00 UTC'); % [10226.5 mjd2000]
 
 m0=22.3; % [kg]
 t0=MJD20002et(8400); % [mjd2000]
-targ='20478784';
+targ='3702319';
 
-ToF_g=450; %[d]
+ToF_g=550; %[d]
 
 % 3702319  2014 YD    [683]
 % 3550232  2010 UE51  [390]
@@ -74,16 +74,15 @@ fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient'
 
 % [lltf_TO,~,~,~,jacFD]=fsolve(@(llt) TO_ZFP(llt,t0,SC_param,targ),[l0_g; tf_g],fsopt);
 % 
-% ll_TO=lltf_TO(1:7);
-% tf_TO=lltf_TO(8)*TU+t0;
-
 % [df,jacAN]=TO_ZFP(lltf_TO,t0,SC_param,targ);
 % 
-% DispRes(ll_TO,[t0 tf_TO],SC_param,targ,0);
+% DispRes(lltf_TO,t0,SC_param,targ,0);
 
 [m,lltf,dt]=TO_TCONTk(t0,SC_param,targ);
 
-DispRes(lltf(1:7,end),[t0 t0+lltf(8,end)*TU],SC_param,targ,0);
+[df,jacAN]=TO_ZFP(lltf(:,end),t0,SC_param,targ);
+
+DispRes(lltf(:,end),t0,SC_param,targ,0);
 
 % %-AUX solution attempt-----------------------------------------------------
 % 

@@ -1,8 +1,9 @@
 function [df,J] = TO_ZFP(llt,t0,sc_param,targ)
 
 % testing branch
-% dimensional input (but costates and final time)
-% adimensional output
+% adimensional guess input llt
+% dimensional input t0,sc_param
+% adimensional output df,J
 
     odeopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
 
@@ -58,13 +59,14 @@ function [df,J] = TO_ZFP(llt,t0,sc_param,targ)
     xtf=cspice_spkezr(targ,tf,'ECLIPJ2000','NONE','Sun');
 
     xtf_ad=ADIM([xtf; 1],sc_param);
-%     rvtf=xtf_ad(1:6);
 
     rrtf=xtf_ad(1:3);
     vvtf=xtf_ad(4:6);
-    aatf=-rrtf./norm(rrtf)^3;
 
     rtf=norm(rrtf);
+
+    aatf=-rrtf./norm(rrtf)^3;
+    daatf=3*dot(rrtf,vvtf)*rrtf/rtf^5-vvtf/rtf^3;
 
     Om=Hf+1-dot([llrf; llvf],[vvtf; aatf]);
 
@@ -73,43 +75,35 @@ function [df,J] = TO_ZFP(llt,t0,sc_param,targ)
     df(7)=lmf;
     df(8)=Om;
 
+    %-Jacobian-------------------------------------------------------------
     J=zeros(8,8);
     
+    %-costate-depenndency--------------------------------------------------
     J(1:6,1:7)=Phif(1:6,8:14);      % phi_r,ll phi_v,ll
     J(7,1:7)=Phif(14,8:14);         % phi_lm,ll
 
     Dff=zeros([7,7]);
-    
     Dff(1:3,:)=Phif(4:6,8:14);
-%     Dff(4:6,:)=3/rf^5*(rrf*rrf.')*Phif(1:3,8:14)-1/rf^3*Phif(1:3,8:14)+...
-%                 -u*T/(mf*lvf)*(Phif(11:13,8:14)-1/(mf*lvf)^2*(llvf*llvf.')*Phif(11:13,8:14));
-
-    Dff(4:6,:)=(3*(rrf*rrf.')./rf^5-eye(3)./rf^3)*Phif(1:3,8:14)-u*T/mf*(Phif(11:13,8:14)./lvf-(llvf*llvf.')*Phif(11:13,8:14)./lvf^3-llvf*Phif(7,8:14)./(lvf*mf));
+    Dff(4:6,:)=(3*(rrf*rrf.')./rf^5-eye(3)./rf^3)*Phif(1:3,8:14)+...
+        -u*T/mf*(Phif(11:13,8:14)./lvf+...
+        -(llvf*llvf.')*Phif(11:13,8:14)./lvf^3+...
+        -llvf*Phif(7,8:14)./(lvf*mf));
    
-    J(8,1:7)=[llrf; llvf; lmf].'*Dff+ffx.'*Phif(8:14,8:14)-vvtf.'*Phif(8:10,8:14)-aatf.'*Phif(11:13,8:14);
+    J(8,1:7)=[llrf; llvf; lmf].'*Dff+ffx.'*Phif(8:14,8:14)+...
+        -vvtf.'*Phif(8:10,8:14)-aatf.'*Phif(11:13,8:14);
 
-    %-assuming-it-to-be-correct-up-to-here---------------------------------
-
-    daatf=3*dot(rrtf,vvtf)*rrtf/rtf^5-vvtf/rtf^3;
-
+    
+    %-time-dependency------------------------------------------------------
     J(1:6,8)=ffx(1:6)-[vvtf; aatf];   % dpsi/dtf
     J(7,8)=dlmf;
 
-
-%     A2=dllvf/lvf-llvf*dot(llvf,dllvf)/lvf^3;
-%     A1=A2/mf-dmf*llvf/(mf^2*lvf);
-%     A=3*dot(rrf,vvf)*rrf/rf^5-vvf/rf^3-u*T*A1;
-% 
-%     dffx=[ffx(4:6); A; 0];
-% 
-%     J(8,8)=dot([dllrf; dllvf; dlmf],ffx)+dot([llrf; llvf; lmf],dffx)-dot(dllrf,vvtf)-dot(llrf,aatf)-dot(dllvf,aatf)-dot(llvf,daatf);
-
     dffx=zeros(7,1);
-
     dffx(1:3)=ffx(4:6);
-    dffx(4:6)=3*dot(rrf,vvf)*rrf/rf^5-vvf/rf^3-u*T/(mf*lvf)*(dllvf-dot(dllvf,llvf)*llvf/lvf^2-dmf*llvf/mf);
+    dffx(4:6)=3*dot(rrf,vvf)*rrf/rf^5-vvf/rf^3+...
+        -u*T/(mf*lvf)*(dllvf-dot(dllvf,llvf)*llvf/lvf^2-dmf*llvf/mf);
 
-    J(8,8)=dot([llrf; llvf; lmf],dffx)+dot(ffx,[dllrf; dllvf; dlmf])-dot(llrf,aatf)-dot(vvtf,dllrf)-dot(llvf,daatf)-dot(aatf,dllvf);
+    J(8,8)=dot([llrf; llvf; lmf],dffx)+dot(ffx,[dllrf; dllvf; dlmf])+...
+        -dot(llrf,aatf)-dot(vvtf,dllrf)-dot(llvf,daatf)-dot(aatf,dllvf);
 
 end
 
