@@ -1,4 +1,4 @@
-function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
+function lltf = TO_TCONT(t0,sc_param,targ)
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1    
@@ -16,11 +16,11 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
 
     sc_param_m=sc_param;
 
-    lltf=zeros(8,N);
-    dt=zeros(1,N);
+    lltf_M=zeros(8,N);
+
+    wb=waitbar(0,'Intiating thrust continuation');
 
     for i=1:N
-        fprintf('%.0f/%.0f ',i,N)
 
         sc_param_m(1:2)=m(i)*sc_param(1:2);
 
@@ -37,7 +37,6 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,t0,sc_param_m,targ),[l0_g; tf_g],fsopt);
             end
 
-            dt(i)=abs(lltf_TO(8)-tf_g);
             tf_g_old=tf_g;
 
         elseif i==2 % 0NPCM
@@ -45,12 +44,12 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
 
             ex_flag=0;
             f=0; % fail count
-            tf_g=lltf(8,i-1);
+            tf_g=lltf_M(8,i-1);
 
             while ex_flag<=0
 
                 if f==0 % attempt 0NPCM
-                    l0_g=lltf(1:7,i-1);                
+                    l0_g=lltf_M(1:7,i-1);                
                 else % ACT
                     l0_g=ACT(t0,sc_param_m);
                 end
@@ -60,18 +59,17 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                 f=f+1;
             end
 
-            dt(i)=abs(lltf_TO(8)-tf_g);
             tf_g_old=tf_g;
 
         elseif i==3 % 1NPCM
             ex_flag=0;
             f=0; % fail count
-            tf_g=lltf(8,i-1)+(m(i)-m(i-1))*(lltf(8,i-1)-lltf(8,i-2))/(m(i-1)-m(i-2));
+            tf_g=lltf_M(8,i-1)+(m(i)-m(i-1))*(lltf_M(8,i-1)-lltf_M(8,i-2))/(m(i-1)-m(i-2));
 
             while ex_flag<=0
 
                 if f==0 % attempt linear
-                    l0_g=lltf(1:7,i-1)+(m(i)-m(i-1))*(lltf(1:7,i-1)-lltf(1:7,i-2))/(m(i-1)-m(i-2));
+                    l0_g=lltf_M(1:7,i-1)+(m(i)-m(i-1))*(lltf_M(1:7,i-1)-lltf_M(1:7,i-2))/(m(i-1)-m(i-2));
                 else % ACT
                     l0_g=ACT(t0,sc_param_m);
                 end
@@ -81,7 +79,6 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                 f=f+1;
             end
 
-            dt(i)=abs(lltf_TO(8)-tf_g);
             tf_g_old=tf_g;
 
         else % power extrap on tf, up to 2NPCM on ll
@@ -89,16 +86,16 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
             f=0; % fail count
 
 %             tf_g=exp(polyval(polyfit(log(m(1:i-1)),log(lltf(8,1:i-1)),2),log(m(i))));
-            tf_g=exp(polyval(polyfit(log(m(i-3:i-1)),log(lltf(8,i-3:i-1)),2),log(m(i))));
+            tf_g=exp(polyval(polyfit(log(m(i-3:i-1)),log(lltf_M(8,i-3:i-1)),2),log(m(i))));
 
-            tf_g=tf_g*lltf(8,i-1)/tf_g_old;
+            tf_g=tf_g*lltf_M(8,i-1)/tf_g_old;
 
             while ex_flag<=0
                 
                 if f==0 % attempt linear
-                    l0_g=lltf(1:7,i-1)+(m(i)-m(i-1))*(lltf(1:7,i-1)-lltf(1:7,i-2))/(m(i-1)-m(i-2));
+                    l0_g=lltf_M(1:7,i-1)+(m(i)-m(i-1))*(lltf_M(1:7,i-1)-lltf_M(1:7,i-2))/(m(i-1)-m(i-2));
                 elseif f==1  % attempt makima 2nd order
-                    l0_g=makima(m(i-3:i-1),lltf(1:7,i-3:i-1),m(i));
+                    l0_g=makima(m(i-3:i-1),lltf_M(1:7,i-3:i-1),m(i));
                 else % ACT
                     l0_g=ACT(t0,sc_param_m);
                 end
@@ -109,20 +106,19 @@ function [m,lltf,dt] = TO_TCONTk(t0,sc_param,targ)
                 
             end
 
-            dt(i)=abs(lltf_TO(8)-tf_g);
             tf_g_old=tf_g;
 
         end
 
 
-        lltf(:,i)=lltf_TO;
+        lltf_M(:,i)=lltf_TO;
 
-%         figure
-%         plot(m(i),tf_g,'x')
-%         hold on
-%         plot(m(1:i),lltf(8,1:i),'-o')
 
-        fprintf('Completed\n')
+%         fprintf('%.1f%%\n',i/N*100)
+        wb=waitbar(i/N,wb,'Thrust continuation');
     end
     fprintf('\n')
+    close(wb);
+
+    lltf=lltf_M(:,end);
 end

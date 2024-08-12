@@ -45,13 +45,13 @@ fprintf('\nTOTAL kernels number: %d\n', cspice_ktotal('ALL'));
 %-shooting problem set up--------------------------------------------------
 
 t_wo=cspice_str2et('2022-12-31 12:00 UTC'); % [8400.5 mjd2000]
-t_wc=cspice_str2et('2027-12-31 12:00 UTC'); % [10226.5 mjd2000]
+t_wc=cspice_str2et('2024-12-31 12:00 UTC'); % [10226.5 mjd2000]
 
 m0=22.3; % [kg]
 t0=MJD20002et(8400); % [mjd2000]
-targ='3702319';
+targ='3550232';
 
-ToF_g=550; %[d]
+ToF_g=500; %[d]
 
 % 3702319  2014 YD    [683]
 % 3550232  2010 UE51  [390]
@@ -72,17 +72,50 @@ tf_g=ToF_g*86400/TU;
 
 fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true);
 
+% % Single solution
 % [lltf_TO,~,~,~,jacFD]=fsolve(@(llt) TO_ZFP(llt,t0,SC_param,targ),[l0_g; tf_g],fsopt);
 % 
 % [df,jacAN]=TO_ZFP(lltf_TO,t0,SC_param,targ);
 % 
 % DispRes(lltf_TO,t0,SC_param,targ,0);
 
-[m,lltf,dt]=TO_TCONTk(t0,SC_param,targ);
+% % First solution through Tcont
+% lltf=TO_TCONT(t0,SC_param,targ);
+% 
+% [df,jacAN]=TO_ZFP(lltf,t0,SC_param,targ);
+% 
+% DispRes(lltf,t0,SC_param,targ,0);
 
-[df,jacAN]=TO_ZFP(lltf(:,end),t0,SC_param,targ);
+[tt0,lltf_M,mp,Hf,mS]=TO_t0CONT([t_wo t_wc],SC_param,targ);
 
-DispRes(lltf(:,end),t0,SC_param,targ,0);
+figure
+subplot(2,2,1)
+plot(et2MJD2000(tt0),lltf_M(8,:)*TU/86400)
+grid on
+grid minor
+xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+legend('tf','Location','best')
+
+subplot(2,2,3)
+plot(et2MJD2000(tt0),mp)
+grid on
+grid minor
+xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+legend('mf','Location','best')
+
+subplot(2,2,2)
+plot(et2MJD2000(tt0),mS)
+grid on
+grid minor
+xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+legend('max S','Location','best')
+
+subplot(2,2,4)
+plot(et2MJD2000(tt0),Hf)
+grid on
+grid minor
+xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+legend('Hf','Location','best')
 
 % %-AUX solution attempt-----------------------------------------------------
 % 

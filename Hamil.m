@@ -10,6 +10,6 @@ function [H] = Hamil(tt,yy,sc_param)
         ll=yy(i,8:14).';
         H(i)=dot(ll,ffx);
     end
-    fprintf('Max relative Hamiltonian variation %.3e%%\n\n',abs((max(H)-min(H))/max(H))*100)
+    
 end
 
