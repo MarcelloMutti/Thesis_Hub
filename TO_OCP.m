@@ -49,7 +49,7 @@ t_wc=cspice_str2et('2024-12-31 12:00 UTC'); % [10226.5 mjd2000]
 
 m0=22.3; % [kg]
 t0=MJD20002et(8400); % [mjd2000]
-targ='3550232';
+targ='3054374';
 
 ToF_g=500; %[d]
 
@@ -72,12 +72,12 @@ tf_g=ToF_g*86400/TU;
 
 fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true);
 
-% % Single solution
-% [lltf_TO,~,~,~,jacFD]=fsolve(@(llt) TO_ZFP(llt,t0,SC_param,targ),[l0_g; tf_g],fsopt);
-% 
-% [df,jacAN]=TO_ZFP(lltf_TO,t0,SC_param,targ);
-% 
-% DispRes(lltf_TO,t0,SC_param,targ,0);
+% Single solution
+[lltf_TO,~,~,~,jacFD]=fsolve(@(llt) TO_ZFP(llt,t0,SC_param,targ),[l0_g; tf_g],fsopt);
+
+[df,jacAN]=TO_ZFP(lltf_TO,t0,SC_param,targ);
+
+DispRes(lltf_TO,t0,SC_param,targ,0);
 
 % % First solution through Tcont
 % lltf=TO_TCONT(t0,SC_param,targ);
@@ -86,36 +86,37 @@ fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient'
 % 
 % DispRes(lltf,t0,SC_param,targ,0);
 
-[tt0,lltf_M,mp,Hf,mS]=TO_t0CONT([t_wo t_wc],SC_param,targ);
-
-figure
-subplot(2,2,1)
-plot(et2MJD2000(tt0),lltf_M(8,:)*TU/86400)
-grid on
-grid minor
-xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
-legend('tf','Location','best')
-
-subplot(2,2,3)
-plot(et2MJD2000(tt0),mp)
-grid on
-grid minor
-xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
-legend('mf','Location','best')
-
-subplot(2,2,2)
-plot(et2MJD2000(tt0),mS)
-grid on
-grid minor
-xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
-legend('max S','Location','best')
-
-subplot(2,2,4)
-plot(et2MJD2000(tt0),Hf)
-grid on
-grid minor
-xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
-legend('Hf','Location','best')
+% % t0 Continuation
+% [tt0,lltf_M,mp,Hf,mS]=TO_t0CONT([t_wo t_wc],SC_param,targ);
+% 
+% figure
+% subplot(2,2,1)
+% plot(et2MJD2000(tt0),lltf_M(8,:)*TU/86400)
+% grid on
+% grid minor
+% xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+% legend('tf','Location','best')
+% 
+% subplot(2,2,3)
+% plot(et2MJD2000(tt0),mp)
+% grid on
+% grid minor
+% xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+% legend('mf','Location','best')
+% 
+% subplot(2,2,2)
+% plot(et2MJD2000(tt0),mS)
+% grid on
+% grid minor
+% xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+% legend('max S','Location','best')
+% 
+% subplot(2,2,4)
+% plot(et2MJD2000(tt0),Hf)
+% grid on
+% grid minor
+% xlim([min(et2MJD2000(tt0)) max(et2MJD2000(tt0))])
+% legend('Hf','Location','best')
 
 % %-AUX solution attempt-----------------------------------------------------
 % 

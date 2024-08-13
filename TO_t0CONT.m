@@ -34,7 +34,7 @@ function [t0_v,lltf_M,mp,Hf,mS] = TO_t0CONT(twin,sc_param,targ)
 
             while ex_flag<=0
 
-                T0=t0_v(it-1)+Dt/f;
+                T0=t0_v(it-1)+Dt/(2^(f-1));
 
                 if f==1 % attempt 0NPCM
 
@@ -114,7 +114,7 @@ function [t0_v,lltf_M,mp,Hf,mS] = TO_t0CONT(twin,sc_param,targ)
 
             while ex_flag<=0
 
-                T0=min(t0_v(it-1)+Dt/f,t_wc);
+                T0=min(t0_v(it-1)+Dt/(2^(f-1)),t_wc);
 
                 if f==1 % attempt 1NPCM
 
