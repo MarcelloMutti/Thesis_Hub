@@ -1,14 +1,26 @@
-function [S] = SwFun(~,yy,sc_param,epsilon)
+function [S] = SwFun(tt,yy,epsilon)
 % adimesional inputs
 
-    c=sc_param(2);
+%     c=sc_param(2);
+    
+    S=zeros(length(tt),1);
+    
+    for i=1:length(tt)
 
-    m=yy(:,7);
-    llv=yy(:,11:13);
-    lv=sqrt(sum(llv.^2,2));
-    lm=yy(:,14);
+    r=norm(yy(i,1:3));
+    Tc=MARGO_param(r);
+
+    c=Tc(2);
+
+    m=yy(i,7);
+    llv=yy(i,11:13);
+
+    lv=norm(llv);
+
+    lm=yy(i,14);
     
-    S=-m.*lv./c-lm+epsilon;
+    S(i)=-m.*lv./c-lm+epsilon;
     
+    end
 end
 

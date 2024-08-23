@@ -1,171 +1,160 @@
-function [t0_v,lltf_M,mp,Hf,mS] = TO_t0CONT(twin,sc_param,targ)
+function [prob] = TO_t0CONT(prob)
 
-    fsopt=optimoptions('fsolve','Display','none','SpecifyObjectiveGradient',true);
-
-    t_wo=twin(1);
-    t_wc=twin(2);
-
-    T0=t_wo;
-    Dt=1*86400;
+    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-14);
 
     it=1;
 
-    t0_v=[];
-    lltf_M=[];
-    mp=[];
-    Hf=[];
-    mS=[];
+    t_wo=prob(it).tw(1);
+    t_wc=prob(it).tw(2);
 
-    while T0<t_wc
+%     targ=prob.targ;
+
+    prob(it).t0=t_wo;
+
+    Dt=86400;
+
+%     t0_v=[];
+%     lltf_M=[];
+%     lltf_alt=[];
+
+    while prob(it).t0<t_wc
 
         if it==1        %-1st-solution-through-T-continuation--------------
+            
+            cont='No';
 
-%             fprintf('Initiating first solution\n\n')
+            while strcmp(cont,'No')
 
-            lltf_TO=TO_TCONT(T0,sc_param,targ);
+                ex_flag=0;
+                f=1;
+    
+                while ex_flag<=0
+    
+                    tf_g=2*pi*unifrnd(1,2);
+                    lltf_g=[ACT(prob(it)); tf_g];
+    
+                    [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
 
-%             fprintf('Initiating continuation\n\n')
-            wb=waitbar((T0-t_wo)/(t_wc-t_wo),'Initiating continuation');
+                    f=f+1;
+    
+                end
+                
+                [~,~,prob(it)]=TO_ZFP(lltf_TO,prob(it));
+                DispRes(prob(it));
+
+                cont=questdlg('Accept initial solution?','Time cont','Yes','No','Exit','Exit');
+                
+                if strcmp(cont,'Exit')
+                    erroe('Continuation Aborted');
+                end
+            end
+
+            close all;
+            wb=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
 
         elseif it==2    %-0NPCM--------------------------------------------
+            fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-14,'MaxIterations',2e2);
+            
+            tic
 
             ex_flag=0;
             f=1;
 
             while ex_flag<=0
 
-                T0=t0_v(it-1)+Dt/(2^(f-1));
+                Dt=Dt/(2^(f-1));
+                prob(it).t0=prob(it-1).t0+Dt;
 
                 if f==1 % attempt 0NPCM
 
-                    lltf_g=lltf_M(:,it-1);            
+                    lltf_g=[prob(it-1).y0(8:14); prob(it-1).tf_ad];        
                    
                 else    % ACT
 
-                    lltf_g=[ACT(T0,sc_param); lltf_M(8,it-1)];
+                    lltf_g=[ACT(prob(it)); prob(it-1).tf_ad];
 
                 end
 
-                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,T0,sc_param,targ),lltf_g,fsopt);
+                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
 
                 f=f+1;
 
             end
 
-%         elseif it==3    %-1NPCM--------------------------------------------
-% 
-%             ex_flag=0;
-%             f=1;
-% 
-%             while ex_flag<=0
-% 
-%                 T0=t0_v(it-1)+Dt/f;
-% 
-%                 if f==1 % attempt 1NPCM
-% 
-%                     lltf_g=lltf_M(:,it-1)+(T0-t0_v(it-1))*(lltf_M(:,it-1)-lltf_M(:,it-2))/(t0_v(it-1)-t0_v(it-2));            
-%                    
-%                 else    % ACT
-% 
-%                     lltf_g=[ACT(T0,sc_param); lltf_M(8,it-1)];
-% 
-%                 end
-% 
-%                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,T0,sc_param,targ),lltf_g,fsopt);
-% 
-%                 f=f+1;
-% 
-%             end
-% 
-% 
-%         elseif it==4    %-2NPCM--------------------------------------------
-% 
-%             ex_flag=0;
-%             f=1;
-% 
-%             while ex_flag<=0
-% 
-%                 T0=t0_v(it-1)+Dt/f;
-% 
-%                 if f==1 % attempt 1NPCM
-% 
-%                     lltf_g=lltf_M(:,it-1)+(T0-t0_v(it-1))*(lltf_M(:,it-1)-lltf_M(:,it-2))/(t0_v(it-1)-t0_v(it-2));            
-%                    
-%                 elseif f==2 % attempt 2NPCM
-% 
-%                     lltf_g=makima(t0_v(it-1:it-3),lltf_M(:,it-1:it-3),T0);
-% 
-%                 else    % ACT
-% 
-%                     lltf_g=[ACT(T0,sc_param); lltf_M(8,it-1)];
-% 
-%                 end
-% 
-%                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,T0,sc_param,targ),lltf_g,fsopt);
-% 
-%                 f=f+1;
-% 
-%             end
 
-        else    %-3NPCM----------------------------------------------------
+        else    %-1-3NPCM--------------------------------------------------
 
             ex_flag=0;
             f=1;
 
             while ex_flag<=0
 
-                T0=min(t0_v(it-1)+Dt/(2^(f-1)),t_wc);
+                Dt=Dt/(2^(f-1));
+                prob(it).t0=min(prob(it-1).t0+Dt,t_wc);
 
                 if f==1 % attempt 1NPCM
 
-                    lltf_g=lltf_M(:,it-1)+(T0-t0_v(it-1))*(lltf_M(:,it-1)-lltf_M(:,it-2))/(t0_v(it-1)-t0_v(it-2));            
+                    lltf_g=[prob(it-1).y0(8:14); prob(it-1).tf_ad]+(prob(it).t0-prob(it-1).t0)*([prob(it-1).y0(8:14); prob(it-1).tf_ad]-[prob(it-2).y0(8:14); prob(it-2).tf_ad])/(prob(it-1).t0-prob(it-2).t0);            
                    
                 elseif f==2 && it>=4 % attempt 2NPCM
 
-                    lltf_g=makima(t0_v(it-3:it-1),lltf_M(:,it-3:it-1),T0);
+                    yy=[prob(it-3:it-1).y0];
+                    ll=yy(8:14,:);
+                    lltf_g=makima([prob(it-3:it-1).t0],[ll; prob(it-3:it-1).tf_ad],prob(it).t0);
 
                 elseif f==3 && it>=5 % attempt 3NPCM
 
-                    lltf_g=makima(t0_v(it-4:it-1),lltf_M(:,it-4:it-1),T0);
+                    yy=[prob(it-4:it-1).y0];
+                    ll=yy(8:14,:);
+                    lltf_g=makima([prob(it-4:it-1).t0],[ll; prob(it-4:it-1).tf_ad],prob(it).t0);
 
                 else    % ACT
 
-                    lltf_g=[ACT(T0,sc_param); lltf_M(8,it-1)];
+                    lltf_g=[ACT(prob(it)); prob(it-1).tf_ad];
 
                 end
 
-                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,T0,sc_param,targ),lltf_g,fsopt);
+                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
 
                 f=f+1;
 
             end
 
-%             fprintf('%.1f%%\n',(T0-t_wo)/(t_wc-t_wo)*100)
+%             fprintf('%.1f%%\n',(prob(it).t0-t_wo)/(t_wc-t_wo)*100)
 
 
         end
 
-        epsilon=0;
+%         epsilon=0;
 
-        [~,yy,S,H]=DispRes(lltf_TO,T0,sc_param,targ,epsilon,0);
+        [~,~,prob(it)]=TO_ZFP(lltf_TO,prob(it));
+%         prob(it)=aux;
 
-        t0_v=[t0_v T0];
-        lltf_M=[lltf_M lltf_TO];
+        prob(it)=DispRes(prob(it),0);
 
-        mp=[mp (yy(1,7)-yy(end,7))*sc_param(3)];
+%         t0_v=[t0_v prob(it).t0];
+%         lltf_M=[lltf_M lltf_TO];
+%         lltf_alt=[lltf_alt [prob(it).y0(8:14); prob(it).tf_ad]];
 
-        Hf=[Hf H(1)];
 
-        mS=[mS max(S)];
+        if prob(it).t0<t_wc
+            prob(it+1)=prob(it);
+            it=it+1;
 
-        it=it+1;
+            if f==1 && it~=1
+                Dt=min(1.1*Dt,5*86400);
+            end
+        end
 
-        wb=waitbar((T0-t_wo)/(t_wc-t_wo),wb,'TO continuation');
+        wb=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb,'TO continuation');
+
 
     end
 
     fprintf('\n')
 
     close(wb);
+
+    toc
 
 end

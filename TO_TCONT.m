@@ -1,4 +1,4 @@
-function lltf = TO_TCONT(t0,sc_param,targ)
+function lltf = TO_TCONT(t0,m0,targ)
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1    
@@ -6,15 +6,15 @@ function lltf = TO_TCONT(t0,sc_param,targ)
     N=15;
 
     ToF_g0=100;
-    m0=100;
+    M0=100;
 
     MaxIt=2e2;
 
-%     fsopt=optimoptions('fsolve','Display','none','FunctionTolerance',1e-12,'SpecifyObjectiveGradient',true);
+%     fsopt=optimoptions('fsolve','Display','iter-detailed','FunctionTolerance',1e-12,'SpecifyObjectiveGradient',true);
 
-    m=(m0-1)*(1-cos(linspace(pi/2,0,N)))+1;
+    M=(M0-1)*(1-cos(linspace(pi/2,0,N)))+1;
 
-    sc_param_m=sc_param;
+%     sc_param_m=sc_param;
 
     lltf_M=zeros(8,N);
 
@@ -22,10 +22,10 @@ function lltf = TO_TCONT(t0,sc_param,targ)
 
     for i=1:N
 
-        sc_param_m(1:2)=m(i)*sc_param(1:2);
+%         sc_param_m(1:2)=m(i)*sc_param(1:2);
 
         if i==1 % first solution attempt
-            fsopt=optimoptions('fsolve','Display','none','FunctionTolerance',1e-12,'SpecifyObjectiveGradient',true,'MaxIterations',MaxIt);
+            fsopt=optimoptions('fsolve','Display','iter-detailed','FunctionTolerance',1e-12,'SpecifyObjectiveGradient',true,'MaxIterations',MaxIt);
 
 
             ToF_g=ToF_g0;
@@ -33,14 +33,21 @@ function lltf = TO_TCONT(t0,sc_param,targ)
 
             ex_flag=0;
             while ex_flag<=0
-                l0_g=ACT(t0,sc_param_m);
-                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,t0,sc_param_m,targ),[l0_g; tf_g],fsopt);
+
+%                 x0=SEL2_ND(t0);
+%                 r0=norm(x0(1:3));
+                
+                Tc=M(i)*MARGO_param(1);
+
+                l0_g=ACT(t0,[Tc; m0]);
+
+                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,t0,m0,targ,M(i)),[l0_g; tf_g],fsopt);
             end
 
             tf_g_old=tf_g;
 
         elseif i==2 % 0NPCM
-            fsopt=optimoptions('fsolve','Display','none','FunctionTolerance',1e-12,'SpecifyObjectiveGradient',true);
+            fsopt=optimoptions('fsolve','Display','iter-detailed','FunctionTolerance',1e-12,'SpecifyObjectiveGradient',true);
 
             ex_flag=0;
             f=0; % fail count
@@ -64,12 +71,12 @@ function lltf = TO_TCONT(t0,sc_param,targ)
         elseif i==3 % 1NPCM
             ex_flag=0;
             f=0; % fail count
-            tf_g=lltf_M(8,i-1)+(m(i)-m(i-1))*(lltf_M(8,i-1)-lltf_M(8,i-2))/(m(i-1)-m(i-2));
+            tf_g=lltf_M(8,i-1)+(M(i)-M(i-1))*(lltf_M(8,i-1)-lltf_M(8,i-2))/(M(i-1)-M(i-2));
 
             while ex_flag<=0
 
                 if f==0 % attempt linear
-                    l0_g=lltf_M(1:7,i-1)+(m(i)-m(i-1))*(lltf_M(1:7,i-1)-lltf_M(1:7,i-2))/(m(i-1)-m(i-2));
+                    l0_g=lltf_M(1:7,i-1)+(M(i)-M(i-1))*(lltf_M(1:7,i-1)-lltf_M(1:7,i-2))/(M(i-1)-M(i-2));
                 else % ACT
                     l0_g=ACT(t0,sc_param_m);
                 end
@@ -86,16 +93,16 @@ function lltf = TO_TCONT(t0,sc_param,targ)
             f=0; % fail count
 
 %             tf_g=exp(polyval(polyfit(log(m(1:i-1)),log(lltf(8,1:i-1)),2),log(m(i))));
-            tf_g=exp(polyval(polyfit(log(m(i-3:i-1)),log(lltf_M(8,i-3:i-1)),2),log(m(i))));
+            tf_g=exp(polyval(polyfit(log(M(i-3:i-1)),log(lltf_M(8,i-3:i-1)),2),log(M(i))));
 
             tf_g=tf_g*lltf_M(8,i-1)/tf_g_old;
 
             while ex_flag<=0
                 
                 if f==0 % attempt linear
-                    l0_g=lltf_M(1:7,i-1)+(m(i)-m(i-1))*(lltf_M(1:7,i-1)-lltf_M(1:7,i-2))/(m(i-1)-m(i-2));
+                    l0_g=lltf_M(1:7,i-1)+(M(i)-M(i-1))*(lltf_M(1:7,i-1)-lltf_M(1:7,i-2))/(M(i-1)-M(i-2));
                 elseif f==1  % attempt makima 2nd order
-                    l0_g=makima(m(i-3:i-1),lltf_M(1:7,i-3:i-1),m(i));
+                    l0_g=makima(M(i-3:i-1),lltf_M(1:7,i-3:i-1),M(i));
                 else % ACT
                     l0_g=ACT(t0,sc_param_m);
                 end

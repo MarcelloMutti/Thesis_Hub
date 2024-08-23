@@ -1,7 +1,8 @@
-function [dydPhi] = TwBP_EL(~, y, u, sc_param)
+function [dydPhi] = TwBP_EL(~, y, u)
 % v1 (master)
 
 % adimensional dynamics
+
 
     rr=y(1:3);
     vv=y(4:6);
@@ -22,8 +23,13 @@ function [dydPhi] = TwBP_EL(~, y, u, sc_param)
     G=3*(rr*rr.')/r^5-eye(3)/r^3;
     H=zeros(3,3);
 
-    T=sc_param(1);
-    c=sc_param(2);
+%     T=sc_param(1);
+%     c=sc_param(2);
+
+    Tc=MARGO_param(r);
+
+    T=Tc(1);
+    c=Tc(2);
 
     x=rr(1);
     y=rr(2);
