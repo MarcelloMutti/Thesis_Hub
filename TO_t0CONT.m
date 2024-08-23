@@ -1,21 +1,16 @@
 function [prob] = TO_t0CONT(prob)
 
-    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-14);
+    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'MaxIterations',2e2);
 
     it=1;
 
     t_wo=prob(it).tw(1);
     t_wc=prob(it).tw(2);
 
-%     targ=prob.targ;
-
     prob(it).t0=t_wo;
 
     Dt=86400;
-
-%     t0_v=[];
-%     lltf_M=[];
-%     lltf_alt=[];
+    N=25;
 
     while prob(it).t0<t_wc
 
@@ -27,17 +22,31 @@ function [prob] = TO_t0CONT(prob)
 
                 ex_flag=0;
                 f=1;
+                atmp=1; % number of rundown attempts
+                tf_gv=linspace(2*pi,4*pi,N); % rundown guesses
+
+                wb1=waitbar(0,'Generating first solution');
     
                 while ex_flag<=0
     
-                    tf_g=2*pi*unifrnd(1,2);
+                    tf_g=tf_gv(f);
                     lltf_g=[ACT(prob(it)); tf_g];
     
                     [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
 
+                    wb1=waitbar(f/(atmp*N),wb1,'Generating first solution');
+
                     f=f+1;
+
+                    if f>N
+                        atmp=atmp+1;
+                        tf_gv=linspace(2*pi,4*pi,atmp*N);
+                        f=1;
+                    end
     
                 end
+
+                close(wb1);
                 
                 [~,~,prob(it)]=TO_ZFP(lltf_TO,prob(it));
                 DispRes(prob(it));
@@ -45,15 +54,17 @@ function [prob] = TO_t0CONT(prob)
                 cont=questdlg('Accept initial solution?','Time cont','Yes','No','Exit','Exit');
                 
                 if strcmp(cont,'Exit')
-                    erroe('Continuation Aborted');
+                    error('Continuation Aborted');
                 end
             end
 
-            close all;
-            wb=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
+            close all
+            clc
+
+            wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
 
         elseif it==2    %-0NPCM--------------------------------------------
-            fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-14,'MaxIterations',2e2);
+            fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'MaxIterations',2e2);
             
             tic
 
@@ -141,19 +152,19 @@ function [prob] = TO_t0CONT(prob)
             prob(it+1)=prob(it);
             it=it+1;
 
-            if f==1 && it~=1
+            if f~=1 && it~=1    % check if correct
                 Dt=min(1.1*Dt,5*86400);
             end
         end
 
-        wb=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb,'TO continuation');
+        wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb2,'TO continuation');
 
 
     end
 
     fprintf('\n')
 
-    close(wb);
+    close(wb2);
 
     toc
 
