@@ -12,7 +12,7 @@ function [df,J,prob] = TO_ZFP(llt,prob)
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
-    u=1;
+%     u=1;
 
     m0=prob.m0;
     t0=prob.t0;
@@ -36,7 +36,7 @@ function [df,J,prob] = TO_ZFP(llt,prob)
     Phi0=eye(length(yy0));
     vPhi0=reshape(Phi0,[length(yy0)^2,1]);
 
-    [~, yy]=ode78(@(t,y) TwBP_EL(t,y,u),[0 tf_ad],[yy0; vPhi0],odeopt);
+    [~, yy]=ode78(@(t,y) TwBP_EL(t,y),[0 tf_ad],[yy0; vPhi0],odeopt);
 
     yyf=yy(end,:).';
 
@@ -125,10 +125,10 @@ function [df,J,prob] = TO_ZFP(llt,prob)
 %     J(8,8)=dot([llrf; llvf; lmf],dffx)+dot(ffx,[dllrf; dllvf; dlmf])+...
 %         -dot(llrf,aatf)-dot(vvtf,dllrf)-dot(llvf,daatf)-dot(aatf,dllvf);
 
-    prob.y0=yy0;
     df=TO_gamma(yyf,prob);
     J=TO_jacobian(yyf,prob);
 
+    prob.y0=yy0;
     prob.gamma=df;
     prob.jac=J;
 

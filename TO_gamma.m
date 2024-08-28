@@ -3,7 +3,7 @@ function df = TO_gamma(yf,prob)
 %     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 %     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
-    u=1;
+%     u=1;
 
     m0=prob.m0;
     tf=prob.tf;
@@ -16,7 +16,7 @@ function df = TO_gamma(yf,prob)
     llrf=yf(8:10);
     llvf=yf(11:13);
     lmf=yf(14);
-    ff=TwBP_EL(tf_ad,yf,u);
+    ff=TwBP_EL(tf_ad,yf);
     ffx=ff(1:7);
 
     Hf=dot([llrf; llvf; lmf],ffx);

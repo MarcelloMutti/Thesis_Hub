@@ -57,6 +57,7 @@ function [prob] = TO_t0CONT(prob)
                 cont=questdlg('Accept initial solution?','Time cont','Yes','No','Exit','Exit');
                 
                 if strcmp(cont,'Exit')
+                    close all
                     error('Continuation Aborted');
                 elseif strcmp(cont,'No')
                     close all

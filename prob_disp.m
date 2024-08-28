@@ -136,20 +136,49 @@ grid minor
 axis tight
 title('v error')
 
-[tP,tF]=plomb([prob.tf_ad],([prob.t0]));
-[vP,vF]=plomb(sqrt(sum(Y0(4:6,:).^2)),([prob.t0]));
+% [tP,tF]=plomb([prob.tf_ad],([prob.t0]));
+% [vP,vF]=plomb(sqrt(sum(Y0(4:6,:).^2)),([prob.t0]));
+% 
+% figure
+% subplot(1,2,1)
+% plot(tF,tP)
+% grid on
+% grid minor
+% axis tight
+% title('tf spectra')
+% 
+% subplot(1,2,2)
+% plot(vF,vP)
+% grid on
+% grid minor
+% axis tight
+% title('v spectra')
+
+rrM=zeros(size(prob));
+rrm=rrM;
+for i=1:length(prob)
+    rrM(i)=max(sqrt(sum(prob(i).yy(:,1:3).^2,2)));
+    rrm(i)=min(sqrt(sum(prob(i).yy(:,1:3).^2,2)));
+end
+
+P=@(r) dot(r.^(0:4),[840.11  -1754.3 1625.01 -739.87  134.45]);
+rmlim=fzero(@(x) P(x)-120,1);
 
 figure
 subplot(1,2,1)
-plot(tF,tP)
+plot(et2MJD2000([prob.t0]),rrm)
+hold on
+plot(et2MJD2000([prob.t0]),rmlim*ones(size(prob)),'r--')
 grid on
 grid minor
 axis tight
-title('tf spectra')
+title('min r')
 
 subplot(1,2,2)
-plot(vF,vP)
+plot(et2MJD2000([prob.t0]),rrM)
+hold on
+plot(et2MJD2000([prob.t0]),1.7047*ones(size(prob)),'r--')
 grid on
 grid minor
 axis tight
-title('v spectra')
+title('max r')

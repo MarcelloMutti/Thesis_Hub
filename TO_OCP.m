@@ -39,6 +39,7 @@ epsilon=0;
 
 cspice_furnsh('kernels\metaker.tm')
 fprintf('\nTOTAL kernels number: %d\n', cspice_ktotal('ALL'));
+% SEPdyn_cont(); % to KEEP
 
 t_wo=cspice_str2et(str_wo); % [8400.5 mjd2000]
 t_wc=cspice_str2et(str_wc); % [10226.5 mjd2000]

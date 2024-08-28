@@ -35,7 +35,7 @@ function [prob] = DispRes(prob,output)
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
     MU=prob.m0;
 
-    u=1;
+%     u=1;
 
     tf=prob.tf;
 
@@ -48,7 +48,7 @@ function [prob] = DispRes(prob,output)
     Phi0=eye(length(y0));
     vPhi0=reshape(Phi0,[length(y0)^2,1]);
 
-    [tt, yy]=ode78(@(t,y) TwBP_EL(t,y,u),[0 (tf-t0)/TU],[y0; vPhi0],odeopt);
+    [tt, yy]=ode78(@(t,y) TwBP_EL(t,y),[0 (tf-t0)/TU],[y0; vPhi0],odeopt);
 
     ToF=(tf-t0)/86400;          % [d]
     mf=yy(end,7)*m0;            % [kg]
