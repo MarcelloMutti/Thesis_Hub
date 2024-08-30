@@ -7,9 +7,11 @@ function [xx_SEL2] = SEL2_ND(t)
 
     mu_S=cspice_bodvrd('Sun','GM',1);
     mu_E=cspice_bodvrd('Earth','GM',1);
-
+    
+    % eph
     xx_E=cspice_spkezr('Earth',t,'ECLIPJ2000','NONE','Sun');
 
+%     % prop
 %     if length(t)==1
 %         if t==t_wo
 %             xx_E=cspice_spkezr('Earth',t,'ECLIPJ2000','NONE','Sun');
@@ -24,6 +26,8 @@ function [xx_SEL2] = SEL2_ND(t)
 %         xx_E=yy.';
 %     end
 
-    xx_SEL2=xx_E.*(1+(mu_E/(3*mu_S))^(1/3));
+%     xx_SEL2=xx_E.*(1+(mu_E/(3*mu_S))^(1/3));
+
+    xx_SEL2=cspice_spkezr('392',t,'ECLIPJ2000','NONE','Sun');
 end
 

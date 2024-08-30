@@ -19,8 +19,10 @@ function SEPdyn_cont()
     cf=U(4);% =1e-6
     
     syms g0; % to be substituted
+    assume(g0,'real');
     
     MP=sym('MP',[3,5]);
+    assume(MP,'real');
     
     % ap=sym('ap',[1,5]); % to be substituted
     % bp=sym('bp',[1,5]);
