@@ -1,4 +1,4 @@
-function J = TO_jacobian(yf,prob)
+function J = TO_jacobian(yf,prob,Ptype)
 
     u=1;
 
@@ -23,7 +23,7 @@ function J = TO_jacobian(yf,prob)
     vPhif=yf(15:210);
     Phif=reshape(vPhif,[14,14]);
 
-    ff=TwBP_EL(tf_ad,yf);
+    ff=TwBP_EL(tf_ad,yf,Ptype);
     ffx=ff(1:7);
 
     dmf=ffx(7);

@@ -48,7 +48,12 @@ function [prob] = DispRes(prob,output)
     Phi0=eye(length(y0));
     vPhi0=reshape(Phi0,[length(y0)^2,1]);
 
-    [tt, yy]=ode78(@(t,y) TwBP_EL(t,y),[0 (tf-t0)/TU],[y0; vPhi0],odeopt);
+%     [tt,yy]=ode78(@(t,y) TwBP_EL(t,y),[0 (tf-t0)/TU],[y0; vPhi0],odeopt);
+    [tt,yy]=ode78_cust(prob,[0 (tf-t0)/TU],[y0; vPhi0]);
+
+%     options.AbsTol=1e-6;
+%     options.RelTol=1e-6;
+%     [tt, yy]=rk78_cust([0 (tf-t0)/TU],[y0; vPhi0],options);
 
     ToF=(tf-t0)/86400;          % [d]
     mf=yy(end,7)*m0;            % [kg]
@@ -70,7 +75,7 @@ function [prob] = DispRes(prob,output)
     II=LU/TU*TTcc(2,:)/g0;
 
     S=SwFun(tt,yy,epsilon);
-    H=Hamil(tt,yy);
+    H=Hamil(tt,yy,prob);
 
     prob.mf=mf;
     prob.mp=mp;
@@ -155,7 +160,7 @@ function [prob] = DispRes(prob,output)
         grid minor
 
         %-hamiltonian------------------------------------------------------
-        subplot(4,2,8)
+        subplot(4,2,7:8)
         plot(ttd,H)
         xlim([ttd(1) ttd(end)])
         ylabel('H')

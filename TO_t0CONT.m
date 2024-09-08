@@ -12,6 +12,7 @@ function [prob] = TO_t0CONT(prob)
 
     prob(it).t0=t_wo;
 
+    Dt_max=1; % [days]
     Dt_iter=86400;
     N=25;
 
@@ -148,7 +149,7 @@ function [prob] = TO_t0CONT(prob)
 
                 f=f+1;
 
-                disp(f)
+                disp(f-1)
 
             end
 
@@ -176,7 +177,7 @@ function [prob] = TO_t0CONT(prob)
                 Dt_iter=Dt_atmp;
 
                 if (f-1)==1
-                    Dt_iter=min(1.1*Dt_iter,5*86400);
+                    Dt_iter=min(1.1*Dt_iter,Dt_max*86400);
                 end
             end
 
@@ -195,6 +196,32 @@ function [prob] = TO_t0CONT(prob)
     fprintf('\n')
 
     close(wb2);
+
+    figure
+    plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
+    grid on
+    grid minor
+    axis tight
+    % ylim([100 1100])
+    title('tf')
+
+    s=length(prob);
+    id=[1:5:s, s];
+
+    figure
+    for i=id
+        plot3(prob(i).yy(:,1),prob(i).yy(:,2),prob(i).yy(:,3),'color',[.7 .7 .7])
+        view([55, 55])
+        hold on
+        plot3(prob(i).yy(1,1),prob(i).yy(1,2),prob(i).yy(1,3),'ob')
+        plot3(prob(i).yy(end,1),prob(i).yy(end,2),prob(i).yy(end,3),'kx')
+        plot3(0,0,0,'+k')
+    end
+    grid on
+    grid minor
+    xlabel('$x [AU]$')
+    ylabel('$y [AU]$')
+    zlabel('$z [AU]$')
 
     toc
 

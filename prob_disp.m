@@ -13,7 +13,7 @@ plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
 grid on
 grid minor
 axis tight
-% ylim([100 1100])
+ylim([100 1100])
 title('tf')
 
 figure
@@ -165,20 +165,21 @@ P=@(r) dot(r.^(0:4),[840.11  -1754.3 1625.01 -739.87  134.45]);
 rmlim=fzero(@(x) P(x)-120,1);
 
 figure
-subplot(1,2,1)
 plot(et2MJD2000([prob.t0]),rrm)
 hold on
 plot(et2MJD2000([prob.t0]),rmlim*ones(size(prob)),'r--')
-grid on
-grid minor
-axis tight
-title('min r')
-
-subplot(1,2,2)
 plot(et2MJD2000([prob.t0]),rrM)
-hold on
 plot(et2MJD2000([prob.t0]),1.7047*ones(size(prob)),'r--')
 grid on
 grid minor
 axis tight
-title('max r')
+title('r bounds')
+
+% subplot(1,2,2)
+% plot(et2MJD2000([prob.t0]),rrM)
+% hold on
+% plot(et2MJD2000([prob.t0]),1.7047*ones(size(prob)),'r--')
+% grid on
+% grid minor
+% axis tight
+% title('max r')

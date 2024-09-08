@@ -20,7 +20,7 @@ clear all; close all; clc;
 str_wo='2022-12-31 12:00 UTC';
 str_wc='2024-12-31 12:00 UTC';
 
-targ='3702319';
+targ='3054374';
 m0=22.3;  % [kg]
 Pmax=120; % [W]
 Pmin=20;  % [W]
@@ -39,10 +39,10 @@ epsilon=0;
 
 cspice_furnsh('kernels\metaker.tm')
 fprintf('\nTOTAL kernels number: %d\n', cspice_ktotal('ALL'));
-% SEPdyn_cont(); % to KEEP
+% SEP_dyn(); % to KEEP
 
 t_wo=cspice_str2et(str_wo); % [8400.5 mjd2000]
-t_wc=cspice_str2et(str_wc); % [10226.5 mjd2000]
+t_wc=cspice_str2et(str_wc); % [9131.5 mjd2000]
 
 % t_wo=MJD20002et(8400.5);
 % t_wc=MJD20002et(8410.5);

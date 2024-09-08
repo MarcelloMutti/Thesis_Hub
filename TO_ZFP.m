@@ -36,7 +36,12 @@ function [df,J,prob] = TO_ZFP(llt,prob)
     Phi0=eye(length(yy0));
     vPhi0=reshape(Phi0,[length(yy0)^2,1]);
 
-    [~, yy]=ode78(@(t,y) TwBP_EL(t,y),[0 tf_ad],[yy0; vPhi0],odeopt);
+%     [~, yy]=ode78(@(t,y) TwBP_EL(t,y),[0 tf_ad],[yy0; vPhi0],odeopt);
+    [~,yy] =ode78_cust(prob,[0 tf_ad],[yy0; vPhi0]);
+
+%     options.AbsTol=1e-6;
+%     options.RelTol=1e-6;
+%     [~, yy]=rk78_cust([0 tf_ad],[yy0; vPhi0],options);
 
     yyf=yy(end,:).';
 
@@ -124,9 +129,18 @@ function [df,J,prob] = TO_ZFP(llt,prob)
 % 
 %     J(8,8)=dot([llrf; llvf; lmf],dffx)+dot(ffx,[dllrf; dllvf; dlmf])+...
 %         -dot(llrf,aatf)-dot(vvtf,dllrf)-dot(llvf,daatf)-dot(aatf,dllvf);
+    
+    rf=norm(yyf(1:3));
+    [~,~,Sp]=MARGO_param(rf);
 
-    df=TO_gamma(yyf,prob);
-    J=TO_jacobian(yyf,prob);
+    if Sp<prob.Plim(2)
+        Ptype='med';
+    elseif Sp>=prob.Plim(2)
+        Ptype='max';
+    end
+
+    df=TO_gamma(yyf,prob,Ptype);
+    J=TO_jacobian(yyf,prob,Ptype);
 
     prob.y0=yy0;
     prob.gamma=df;

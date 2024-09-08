@@ -31,7 +31,8 @@ function [sc_param, dr_sc_param, P] = MARGO_param(r)
 
     Tmax=@(P) sum(P.^(0:4).*a,2); % [mN]
     Isp=@(P) sum(P.^(0:4).*b,2);  % [s]
-    Pin=@(r) sum(r.^(0:4).*c,2);  % [W]
+    Sp=@(r) sum(r.^(0:4).*c,2);   % [W]
+    Pin=@(r) min(120,Sp(r));      % [W] to add prob.Plim(2)
 
 %     dTmaxdPin=@(P) dot(P.^(0:3),da);
 %     dIspdPin=@(P) dot(P.^(0:3),db); 
@@ -43,14 +44,25 @@ function [sc_param, dr_sc_param, P] = MARGO_param(r)
 
     sc_param=zeros(2,length(r));
     dr_sc_param=zeros(2,length(r));
-    P=zeros(1,length(r));
+%     P=zeros(1,length(r));
 
     sc_param(1,:)=TU^2/(MU*LU)*Tmax(Pin(r))*1e-6;  % T [-]
     sc_param(2,:)=TU/LU*Isp(Pin(r))*g0;            % c [-]
 
-    dr_sc_param(1,:)=TU^2/(MU*LU)*dTmaxdPin(Pin(r)).*dPindr(r)*1e-6; % dT/dr
-    dr_sc_param(2,:)=TU/LU*dIspdPin(Pin(r)).*dPindr(r)*g0;           % dIsp/dr
+    if Pin(r)<120
 
-    P=Pin(r); % [W]
+        dr_sc_param(1,:)=TU^2/(MU*LU)*dTmaxdPin(Pin(r)).*dPindr(r)*1e-6; % dT/dr
+        dr_sc_param(2,:)=TU/LU*dIspdPin(Pin(r)).*dPindr(r)*g0;           % dIsp/dr
+
+    elseif Pin(r)>=120
+
+        dr_sc_param(1,:)=0;
+        dr_sc_param(2,:)=0;
+
+    end
+
+    P=Sp(r); % [W]
+%     dPdr=dPindr(r); % [W/AU]
+    
 
 end
