@@ -1,4 +1,4 @@
-function [H] = Hamil(tt,yy,prob)
+function [H] = Hamil(tt,zz,prob)
 % adimesional inputs
 
 %     u=1;
@@ -6,7 +6,7 @@ function [H] = Hamil(tt,yy,prob)
 
     for i=1:length(H)
 
-        r=norm(yy(i,1:3));
+        r=norm(zz(i,1:3));
         [~,~,Sp]=MARGO_param(r);
     
         if Sp<prob.Plim(2)
@@ -15,9 +15,9 @@ function [H] = Hamil(tt,yy,prob)
             Ptype='max';
         end
 
-        ff=TwBP_EL(tt(i),yy(i,:).',Ptype);
+        ff=TwBP_EL(tt(i),zz(i,:).',Ptype);
         ffx=ff(1:7);
-        ll=yy(i,8:14).';
+        ll=zz(i,8:14).';
         H(i)=dot(ll,ffx);
     end
     

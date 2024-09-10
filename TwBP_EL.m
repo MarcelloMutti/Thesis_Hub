@@ -2,7 +2,7 @@ function [dydPhi] = TwBP_EL(~, z, Ptype)
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
-    MU=22.3;                                    % m0 [kg]
+    MU=22.6;                                    % m0 [kg]
     cf=1e-6;    % conversion factor from [mN] to [kg*km/s^2]
 
     % adimensionalization param
@@ -18,24 +18,19 @@ function [dydPhi] = TwBP_EL(~, z, Ptype)
     y=z(1:14);
     Phi=reshape(z(15:210),[14,14]);
 
-%     dy=F(y,MP,U,g0);
-%     A=DyF(y,MP,U,g0);
-
-%     r=norm(z(1:3));
-%     P=dot(r.^(0:4),MP(3,:));
-
     if strcmp(Ptype,'med')
 
-        [dy,A]=TO_SEP_med(y,MP,U,g0);
+        [dy,A]=TO_SEP_dz(y,MP,U,g0);
 
     elseif strcmp(Ptype,'max')
 
-        [dy,A]=TO_SEP_max(y,MP,U,g0);
+        [~,~,dy,A]=TO_SEP_dz(y,MP,U,g0);
 
     end
         
-
     dydPhi=zeros(210,1);
+
     dydPhi(1:14)=dy;
     dydPhi(15:210)=reshape(A*Phi,[14*14,1]);
+
 end

@@ -72,7 +72,6 @@ function [prob] = TO_t0CONT(prob)
             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
 
         elseif it==2    %-0NPCM--------------------------------------------
-%             fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-8,'MaxIterations',2e2);
             
             tic
 
@@ -149,26 +148,13 @@ function [prob] = TO_t0CONT(prob)
 
                 f=f+1;
 
-                disp(f-1)
-
             end
-
-%             fprintf('%.1f%%\n',(prob(it).t0-t_wo)/(t_wc-t_wo)*100)
-
 
         end
 
-%         epsilon=0;
-
         [~,~,prob(it)]=TO_ZFP(lltf_TO,prob(it));
-%         prob(it)=aux;
 
         prob(it)=DispRes(prob(it),0);
-
-%         t0_v=[t0_v prob(it).t0];
-%         lltf_M=[lltf_M lltf_TO];
-%         lltf_alt=[lltf_alt [prob(it).y0(8:14); prob(it).tf_ad]];
-
 
         if prob(it).t0<t_wc
             prob(it+1)=prob(it);
@@ -202,19 +188,19 @@ function [prob] = TO_t0CONT(prob)
     grid on
     grid minor
     axis tight
-    % ylim([100 1100])
+    ylim([100 1100])
     title('tf')
 
     s=length(prob);
-    id=[1:5:s, s];
+    id=[1:10:s, s];
 
     figure
     for i=id
-        plot3(prob(i).yy(:,1),prob(i).yy(:,2),prob(i).yy(:,3),'color',[.7 .7 .7])
+        plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
         view([55, 55])
         hold on
-        plot3(prob(i).yy(1,1),prob(i).yy(1,2),prob(i).yy(1,3),'ob')
-        plot3(prob(i).yy(end,1),prob(i).yy(end,2),prob(i).yy(end,3),'kx')
+        plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
+        plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
         plot3(0,0,0,'+k')
     end
     grid on

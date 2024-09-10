@@ -1,3 +1,5 @@
+clc;
+
 Y0=[prob.y0];
 S0=zeros(size(prob));
 
@@ -8,13 +10,48 @@ end
 LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
+isPareto=true(1,length(prob));
+
+for i=1:length(prob)
+    for j=1:length(prob)
+        if i~=j
+            if (prob(j).tf_ad <= prob(i).tf_ad && prob(j).mp < prob(i).mp) || (prob(j).tf_ad < prob(i).tf_ad && prob(j).mp <= prob(i).mp)
+                isPareto(i) = false;
+                break;
+            end
+        end
+    end    
+end
+
 figure
 plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
+hold on
+plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
 grid on
 grid minor
 axis tight
 ylim([100 1100])
 title('tf')
+
+figure
+plot([prob.tf_ad]*TU/86400,[prob.mp],'LineWidth',2)
+hold on
+plot([prob(isPareto).tf_ad]*TU/86400,[prob(isPareto).mp],'xk','LineWidth',2)
+grid on
+grid minor
+axis tight
+xlabel('tf')
+ylabel('mp')
+
+figure
+plot(et2MJD2000([prob.t0]),[prob.tf_ad]/max([prob.tf_ad]),'r','linewidth',2)
+hold on
+plot(et2MJD2000([prob.t0]),[prob.mp]/max([prob.mp]),'b','linewidth',2)
+grid on
+grid minor
+axis tight
+xlabel('tf')
+legend('tf','mp','location','best')
 
 figure
 subplot(3,2,1)
@@ -136,29 +173,11 @@ grid minor
 axis tight
 title('v error')
 
-% [tP,tF]=plomb([prob.tf_ad],([prob.t0]));
-% [vP,vF]=plomb(sqrt(sum(Y0(4:6,:).^2)),([prob.t0]));
-% 
-% figure
-% subplot(1,2,1)
-% plot(tF,tP)
-% grid on
-% grid minor
-% axis tight
-% title('tf spectra')
-% 
-% subplot(1,2,2)
-% plot(vF,vP)
-% grid on
-% grid minor
-% axis tight
-% title('v spectra')
-
 rrM=zeros(size(prob));
 rrm=rrM;
 for i=1:length(prob)
-    rrM(i)=max(sqrt(sum(prob(i).yy(:,1:3).^2,2)));
-    rrm(i)=min(sqrt(sum(prob(i).yy(:,1:3).^2,2)));
+    rrM(i)=max(sqrt(sum(prob(i).zz(:,1:3).^2,2)));
+    rrm(i)=min(sqrt(sum(prob(i).zz(:,1:3).^2,2)));
 end
 
 P=@(r) dot(r.^(0:4),[840.11  -1754.3 1625.01 -739.87  134.45]);
@@ -174,12 +193,3 @@ grid on
 grid minor
 axis tight
 title('r bounds')
-
-% subplot(1,2,2)
-% plot(et2MJD2000([prob.t0]),rrM)
-% hold on
-% plot(et2MJD2000([prob.t0]),1.7047*ones(size(prob)),'r--')
-% grid on
-% grid minor
-% axis tight
-% title('max r')

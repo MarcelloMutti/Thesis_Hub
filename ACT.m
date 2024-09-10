@@ -5,8 +5,10 @@ function [ll0] = ACT(prob)
     
     t0=prob.t0;
     m0=prob.m0;
+
+    xx_SEL2=cspice_spkezr('392',t0,'ECLIPJ2000','NONE','Sun');
     
-    x0d=[SEL2_ND(t0); m0];
+    x0d=[xx_SEL2; m0];
     
     x0=ADIM(x0d,m0);
 

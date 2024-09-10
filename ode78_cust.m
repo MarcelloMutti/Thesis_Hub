@@ -20,14 +20,14 @@ function [tt,zz] =ode78_cust(prob,tspan,z0)
     
         if ~isempty(ie)
 
-            tt=[tt; tti(1:end-1)];   % to try correcting for duplicates
-            zz=[zz; zzi(1:end-1,:)];
+            tt=[tt; tti(1:end)];   % to try correcting for duplicates
+            zz=[zz; zzi(1:end,:)];
 
-            ti=te(end);
-            z0=ze(end,:).';
+            ti=te(1);
+            z0=ze(1,:).';
             tspan(1)=ti;
 
-            switch ie(end)
+            switch ie(1)
 
                 case 1*~strcmp(Ptype,'max')  % Pmed -> Pmax
 

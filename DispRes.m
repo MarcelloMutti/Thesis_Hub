@@ -29,35 +29,22 @@ function [prob] = DispRes(prob,output)
     Pmin=prob.Plim(1);
     Pmax=prob.Plim(2);
 
-    odeopt=odeset('RelTol',1e-13,'AbsTol',1e-13);
-
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
     MU=prob.m0;
 
-%     u=1;
-
     tf=prob.tf;
-
-%     x0=[SEL2_ND(t0); m0];
-% 
-%     x0_ad=ADIM(x0,m0);
 
     y0=prob.y0;
 
     Phi0=eye(length(y0));
     vPhi0=reshape(Phi0,[length(y0)^2,1]);
 
-%     [tt,yy]=ode78(@(t,y) TwBP_EL(t,y),[0 (tf-t0)/TU],[y0; vPhi0],odeopt);
-    [tt,yy]=ode78_cust(prob,[0 (tf-t0)/TU],[y0; vPhi0]);
-
-%     options.AbsTol=1e-6;
-%     options.RelTol=1e-6;
-%     [tt, yy]=rk78_cust([0 (tf-t0)/TU],[y0; vPhi0],options);
+    [tt,zz]=ode78_cust(prob,[0 (tf-t0)/TU],[y0; vPhi0]);
 
     ToF=(tf-t0)/86400;          % [d]
-    mf=yy(end,7)*m0;            % [kg]
-    mp=(yy(1,7)-yy(end,7))*m0;  % [kg]
+    mf=zz(end,7)*m0;            % [kg]
+    mp=(zz(1,7)-zz(end,7))*m0;  % [kg]
 
     ttd=tt*TU/86400; % [d]
 
@@ -65,17 +52,17 @@ function [prob] = DispRes(prob,output)
     xtf_ad=ADIM([xtf; 1],m0);
     rvtf=xtf_ad(1:6);
 
-    df=yy(end,1:6).'-rvtf;
+    df=zz(end,1:6).'-rvtf;
 
-    r=sqrt(sum(yy(:,1:3).^2,2));
+    r=sqrt(sum(zz(:,1:3).^2,2));
 
     [TTcc,~,P]=MARGO_param(r);
 
     TT=(MU*LU)/(TU^2)*TTcc(1,:)*1e6; % [mN]
     II=LU/TU*TTcc(2,:)/g0;
 
-    S=SwFun(tt,yy,epsilon);
-    H=Hamil(tt,yy,prob);
+    S=SwFun(tt,zz,epsilon);
+    H=Hamil(tt,zz,prob);
 
     prob.mf=mf;
     prob.mp=mp;
@@ -83,11 +70,11 @@ function [prob] = DispRes(prob,output)
     prob.H=H;
     prob.tt_ad=tt;
     prob.tt=ttd;
-    prob.yy=yy;
+    prob.zz=zz;
 
     if output==1
 
-        plot3D(t0,tt,yy,targ);
+        plot3D(t0,tt,zz,targ);
     
         fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',3),et2MJD2000(t0))
         fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',3),et2MJD2000(tf))
@@ -103,7 +90,7 @@ function [prob] = DispRes(prob,output)
         %-throttle---------------------------------------------------------
         subplot(4,2,1)
         plot(ttd,1.*(S<0)+0)
-        xlim([ttd(1) ttd(end)])
+        axis tight
         ylim([0 1.1])
         ylabel('$u$')
         grid on
@@ -112,17 +99,15 @@ function [prob] = DispRes(prob,output)
         %-switching-function-----------------------------------------------
         subplot(4,2,3)
         plot(ttd,S)
-        xlim([ttd(1) ttd(end)])
+        axis tight
         ylabel('$S$')
         grid on
         grid minor
             
         %-mass-------------------------------------------------------------
         subplot(4,2,5)
-        plot(ttd,yy(:,7)*m0)
-%         hold on
-%         plot([ttd(1) ttd(end)],[yy(1,7) yy(end,7)]*m0,'--','color',[.8 .8 .8],'LineWidth',0.1)
-        xlim([ttd(1) ttd(end)])
+        plot(ttd,zz(:,7)*m0)
+        axis tight
         ylabel('$m\,[kg]$')
         grid on
         grid minor
@@ -138,7 +123,7 @@ function [prob] = DispRes(prob,output)
             hold on
             plot([ttd(1) ttd(end)],[Pmin,Pmin])
         end
-        xlim([ttd(1) ttd(end)])
+        axis tight
         ylabel('$P_{in}\,[W]$')
         grid on
         grid minor
@@ -146,7 +131,7 @@ function [prob] = DispRes(prob,output)
         %-thrust-----------------------------------------------------------
         subplot(4,2,4)
         plot(ttd,II)
-        xlim([ttd(1) ttd(end)])
+        axis tight
         ylabel('$I_{sp}\,[s]$')
         grid on
         grid minor
@@ -154,7 +139,7 @@ function [prob] = DispRes(prob,output)
         %-specific-impulse-------------------------------------------------
         subplot(4,2,6)
         plot(ttd,TT)
-        xlim([ttd(1) ttd(end)])
+        axis tight
         ylabel('$T_{max}\,[mN]$')
         grid on
         grid minor
@@ -162,7 +147,7 @@ function [prob] = DispRes(prob,output)
         %-hamiltonian------------------------------------------------------
         subplot(4,2,7:8)
         plot(ttd,H)
-        xlim([ttd(1) ttd(end)])
+        axis tight
         ylabel('H')
         grid on
         grid minor

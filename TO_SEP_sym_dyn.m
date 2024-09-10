@@ -1,4 +1,4 @@
-function SEPdyn_cont()
+function TO_SEP_sym_dyn(prob)
 
     y=sym('y',[14,1]);
     assume(y,'real');
@@ -23,10 +23,6 @@ function SEPdyn_cont()
     
     MP=sym('MP',[3,5]);
     assume(MP,'real');
-    
-    % ap=sym('ap',[1,5]); % to be substituted
-    % bp=sym('bp',[1,5]);
-    % cp=sym('cp',[1,5]);
     
     ap=MP(1,:);
     bp=MP(2,:);
@@ -55,17 +51,17 @@ function SEPdyn_cont()
     
     ffl=-jacobian(Hamil,[rr; vv; m]).';
     
-    FF=[ffx; ffl];
-    A=jacobian(FF,y);
+    FF_med=[ffx; ffl];
+    A_med=jacobian(FF_med,y);
     
 %     matlabFunction(FF,'vars',{y,MP,U,g0},'file','F');
 %     matlabFunction(A,'vars',{y,MP,U,g0},'file','DyF');
-    matlabFunction(FF,A,'vars',{y,MP,U,g0},'file','TO_SEP_med');
+%     matlabFunction(FF,A,'vars',{y,MP,U,g0},'file','TO_SEP_med');
 
     %-MAX-Dyn-computed-inside-F-and-DyF------------------------------------
 
-%     P=prob.Plim(2);
-    P=120;
+    P=prob.Plim(2);
+%     P=120;
     T=dot(P.^(0:4),ap);         % [mN]
     I=dot(P.^(0:4),bp);         % [s]
     
@@ -86,11 +82,11 @@ function SEPdyn_cont()
     
     ffl=-jacobian(Hamil,[rr; vv; m]).';
     
-    FF=[ffx; ffl];
-    A=jacobian(FF,y);
+    FF_max=[ffx; ffl];
+    A_max=jacobian(FF_max,y);
     
 %     matlabFunction(FF,'vars',{y,MP,U,g0},'file','F');
 %     matlabFunction(A,'vars',{y,MP,U,g0},'file','DyF');
-    matlabFunction(FF,A,'vars',{y,MP,U,g0},'file','TO_SEP_max');
+    matlabFunction(FF_med,A_med,FF_max,A_max,'vars',{y,MP,U,g0},'file','TO_SEP_dz');
 
 end

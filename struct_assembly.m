@@ -24,7 +24,7 @@ function prob = struct_assembly(targ,twin,m0,Plim,epsilon)
     prob.y0=[];             % [14x1, -]
 
     %-added-by-DispRes-----------------------------------------------------
-    prob.yy=[];             % [Nx210, -]
+    prob.zz=[];             % [Nx210, -]
     prob.tt=[];             % [Nx1, d]
     prob.tt_ad=[];          % [Nx1, -]
     prob.mf=[];             % [1x1, kg]
