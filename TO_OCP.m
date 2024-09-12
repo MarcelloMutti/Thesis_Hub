@@ -17,17 +17,17 @@ clear all; close all; clc;
 str_wo='2022-12-31 12:00 UTC';
 str_wc='2024-12-31 12:00 UTC';
 
-targ='3054374';
+targ='3568303';
 m0=22.6;  % [kg]
 Pmax=120; % [W]
 Pmin=20;  % [W]
 epsilon=0;
 
-% 3054374  2000 SG344 [538] (+2)
-% 3550232  2010 UE51  [392] (+2)
-% 3568303  2011 MD    [504] (+2)
-% 20478784 2012 UV136 [428] (+14)
-% 3702319  2014 YD    [682] (+30)
+% 3054374  2000 SG344 [538]
+% 3550232  2010 UE51  [392]
+% 3568303  2011 MD    [504]
+% 20478784 2012 UV136 [428]
+% 3702319  2014 YD    [682]
 
 % t0=MJD20002et(8400); % [mjd2000]
 % ToF_g=550; %[d]
@@ -43,6 +43,7 @@ t_wc=cspice_str2et(str_wc); % [9131.5 mjd2000]
 prob=struct_assembly(targ,[t_wo t_wc],m0,[Pmin Pmax],epsilon);
 
 % TO_SEP_sym_dyn(prob); % to KEEP
+addpath('TO_dyn')
 
 LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1

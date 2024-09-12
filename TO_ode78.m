@@ -1,4 +1,4 @@
-function [tt,zz] =ode78_cust(prob,tspan,z0)
+function [tt,zz]=TO_ode78(prob,tspan,z0)
 
     options=odeset('AbsTol',1e-12,'RelTol',1e-12,'Events',@(t,y) crossings(t,y,prob));
 
@@ -16,7 +16,7 @@ function [tt,zz] =ode78_cust(prob,tspan,z0)
     complete=0;
 
     while ~complete
-        [tti,zzi,te,ze,ie]=ode78(@(t,z) TwBP_EL(t,z,Ptype),tspan,z0,options);
+        [tti,zzi,te,ze,ie]=ode78(@(t,z) TO_2BP_SEP(t,z,Ptype),tspan,z0,options);
     
         if ~isempty(ie)
 
@@ -34,8 +34,8 @@ function [tt,zz] =ode78_cust(prob,tspan,z0)
                     re=ze(1:3).';
                     ve=ze(4:6).';
 
-                    dze_m=TwBP_EL(te,ze.','med');
-                    dze_p=TwBP_EL(te,ze.','max');
+                    dze_m=TO_2BP_SEP(te,ze.','med');
+                    dze_p=TO_2BP_SEP(te,ze.','max');
 
                     Psi=eye(14)+(dze_p(1:14)-dze_m(1:14))*[re.', zeros(1,11)]./(re.'*ve);
 
@@ -50,8 +50,8 @@ function [tt,zz] =ode78_cust(prob,tspan,z0)
                     re=ze(1:3).';
                     ve=ze(4:6).';
 
-                    dze_m=TwBP_EL(te,ze.','max');
-                    dze_p=TwBP_EL(te,ze.','med');
+                    dze_m=TO_2BP_SEP(te,ze.','max');
+                    dze_p=TO_2BP_SEP(te,ze.','med');
 
                     Psi=eye(14)+(dze_p(1:14)-dze_m(1:14))*[re.', zeros(1,11)]./(re.'*ve);
 

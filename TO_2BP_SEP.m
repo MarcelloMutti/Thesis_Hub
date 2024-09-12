@@ -1,4 +1,4 @@
-function [dydPhi] = TwBP_EL(~, z, Ptype)
+function [dydPhi] = TO_2BP_SEP(~, z, Ptype)
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -18,19 +18,25 @@ function [dydPhi] = TwBP_EL(~, z, Ptype)
     y=z(1:14);
     Phi=reshape(z(15:210),[14,14]);
 
-    if strcmp(Ptype,'med')
-
-        [dy,A]=TO_SEP_dz(y,MP,U,g0);
-
-    elseif strcmp(Ptype,'max')
-
-        [~,~,dy,A]=TO_SEP_dz(y,MP,U,g0);
-
-    end
+    [dy,A]=TO_SEP_dz(y,MP,U,g0,Ptype);
         
     dydPhi=zeros(210,1);
 
     dydPhi(1:14)=dy;
     dydPhi(15:210)=reshape(A*Phi,[14*14,1]);
+
+end
+
+function [dy,A]=TO_SEP_dz(y,MP,U,g0,Ptype)
+
+    if strcmp(Ptype,'med')
+
+        [dy,A]=TO_med_dz(y,MP,U,g0);
+
+    elseif strcmp(Ptype,'max')
+
+        [dy,A]=TO_max_dz(y,MP,U,g0);
+
+    end
 
 end

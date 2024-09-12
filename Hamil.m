@@ -15,7 +15,7 @@ function [H] = Hamil(tt,zz,prob)
             Ptype='max';
         end
 
-        ff=TwBP_EL(tt(i),zz(i,:).',Ptype);
+        ff=TO_2BP_SEP(tt(i),zz(i,:).',Ptype);
         ffx=ff(1:7);
         ll=zz(i,8:14).';
         H(i)=dot(ll,ffx);

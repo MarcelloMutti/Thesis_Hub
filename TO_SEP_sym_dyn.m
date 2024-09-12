@@ -53,15 +53,10 @@ function TO_SEP_sym_dyn(prob)
     
     FF_med=[ffx; ffl];
     A_med=jacobian(FF_med,y);
-    
-%     matlabFunction(FF,'vars',{y,MP,U,g0},'file','F');
-%     matlabFunction(A,'vars',{y,MP,U,g0},'file','DyF');
-%     matlabFunction(FF,A,'vars',{y,MP,U,g0},'file','TO_SEP_med');
 
     %-MAX-Dyn-computed-inside-F-and-DyF------------------------------------
 
-    P=prob.Plim(2);
-%     P=120;
+    P=sym(prob.Plim(2));
     T=dot(P.^(0:4),ap);         % [mN]
     I=dot(P.^(0:4),bp);         % [s]
     
@@ -84,9 +79,15 @@ function TO_SEP_sym_dyn(prob)
     
     FF_max=[ffx; ffl];
     A_max=jacobian(FF_max,y);
-    
-%     matlabFunction(FF,'vars',{y,MP,U,g0},'file','F');
-%     matlabFunction(A,'vars',{y,MP,U,g0},'file','DyF');
-    matlabFunction(FF_med,A_med,FF_max,A_max,'vars',{y,MP,U,g0},'file','TO_SEP_dz');
+
+    dir_name='TO_dyn';
+
+    if ~exist(dir_name,'dir')
+        mkdir(dir_name)
+        addpath(dir_name)
+    end
+
+    matlabFunction(FF_med,A_med,'vars',{y,MP,U,g0},'file',fullfile(dir_name,'TO_med_dz'));
+    matlabFunction(FF_max,A_max,'vars',{y,MP,U,g0},'file',fullfile(dir_name,'TO_max_dz'));
 
 end

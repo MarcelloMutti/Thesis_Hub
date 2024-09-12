@@ -1,6 +1,6 @@
 function [prob] = TO_t0CONT(prob)
 
-    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'FunctionTolerance',1e-7,'MaxIterations',2e2);
+    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -37,6 +37,8 @@ function [prob] = TO_t0CONT(prob)
                     lltf_g=[ACT(prob(it)); tf_g];
     
                     [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
+
+                    
 
                     wb1=waitbar(f/(atmp*N),wb1,'Generating first solution');
 
@@ -95,6 +97,8 @@ function [prob] = TO_t0CONT(prob)
 
                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
 
+                
+
                 df=TO_ZFP(lltf_TO,prob(it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
@@ -139,6 +143,8 @@ function [prob] = TO_t0CONT(prob)
                 end
 
                 [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
+
+                
 
                 df=TO_ZFP(lltf_TO,prob(it));
 
