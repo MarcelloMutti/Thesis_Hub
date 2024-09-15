@@ -1,5 +1,7 @@
-function [S] = SwFun(tt,zz,epsilon)
+function [S] = SwFun(tt,zz,isFO)
 % adimesional inputs
+
+% isFO=1 if fueloptimal
 
 %     c=sc_param(2);
     
@@ -25,7 +27,7 @@ function [S] = SwFun(tt,zz,epsilon)
     
         lv=norm(llv);
         
-        S(i)=-m.*lv./c-lm+epsilon;
+        S(i)=-m.*lv./c-lm+isFO;
     
     end
 

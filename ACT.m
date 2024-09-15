@@ -24,7 +24,7 @@ function [ll0] = ACT(prob)
     b=unifrnd(-0.1, 0.1);
     db=unifrnd(-0.1, 0.1);
 
-    S=unifrnd(-1, 0)-1;
+    S=unifrnd(-1, 0)+(prob.isFO-1);
     dS=unifrnd(-1, 1);
     
     lm=1;
@@ -47,7 +47,7 @@ function [ll0] = ACT(prob)
          cos(a)*da*cos(b)-sin(a)*sin(b)*db;
          cos(b)*db];
 
-    lv=-m/c*(S+lm);
+    lv=-m/c*(S+lm-prob.isFO);
 
     dm=-u*T/c;
     dlm=-u*lv*T/m^2;

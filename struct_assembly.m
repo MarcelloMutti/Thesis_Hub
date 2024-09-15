@@ -1,17 +1,23 @@
-function prob = struct_assembly(targ,twin,m0,Plim,epsilon)
+function prob = struct_assembly(targ,twin,m0,Plim,isFO)
 
     % targ    [str]
     % m0      [1x1, kg]
     % Plim    [1x2, W, (Pmin Pmax)]
     % twin    [1x2, s, (t_wo t_wc)]
-    % epsilon [1x1]
+    % isFO    [1x1]
     
     %-problem-setup--------------------------------------------------------
     prob.targ=targ;         % [str]
     prob.tw=twin;           % [1x2, s]
     prob.m0=m0;             % [1x1, kg]
     prob.Plim=Plim;         % [1x2, W]
-    prob.epsilon=epsilon;   % [1x1, -]
+    prob.isFO=isFO;         % [1x1, -]
+    
+    if isFO==0
+        prob.epsilon=0;
+    else
+        prob.epsilon=[];    % EFO continuation parameter
+    end
     
     %-added-by-TO_t0CONT---------------------------------------------------
     prob.t0=[];             % [1x1, s]

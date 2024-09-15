@@ -1,5 +1,3 @@
-% v1 (branch)
-
 clear all; close all; clc;
 
 % cspice_furnsh('kernels\naif0012.tls'); %LSK leapseconds
@@ -21,7 +19,7 @@ targ='3550232';
 m0=22.6;  % [kg]
 Pmax=120; % [W]
 Pmin=20;  % [W]
-isFO=0;
+isFO=1;
 
 % 3054374  2000 SG344 [538]
 % 3550232  2010 UE51  [392]
@@ -40,25 +38,52 @@ fprintf('\nTOTAL kernels number: %d\n', cspice_ktotal('ALL'));
 t_wo=cspice_str2et(str_wo); % [8400.5 mjd2000]
 t_wc=cspice_str2et(str_wc); % [9131.5 mjd2000]
 
-TO_prob=struct_assembly(targ,[t_wo t_wc],m0,[Pmin Pmax],isFO);
+FO_prob=struct_assembly(targ,[t_wo t_wc],m0,[Pmin Pmax],isFO);
 
-% TO_SEP_sym_dyn(prob); % to KEEP
-addpath('TO_dyn')
+% FO_SEP_sym_dyn(FO_prob); % to KEEP
+addpath('FO_dyn')
 
 LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
-% t0 Continuation
-TO_prob=TO_t0CONT(TO_prob);
+FO_prob.t0=t_wo+0*86400;
+Tof=500;
+% 391.845
+tf_ad=Tof*86400/TU;
 
-% %-AUX solution attempt-----------------------------------------------------
-% 
-% % works with gamma=1 @ eps=1, but to be generalized in continuation process
-% 
-% epsilon=1;
-% 
-% ll_AUX=fsolve(@(ll) AUX_ZFP(ll,[t0 tf_TO],SC_param,targ,epsilon),2*epsilon*ll_TO,fsopt);
-% 
-% DispRes(ll_AUX,[t0 tf_TO],SC_param,targ,epsilon);
+FO_prob.tf_ad=tf_ad;
+FO_prob.tf=FO_prob.t0+tf_ad*TU;
 
-% cspice_kclear();
+xx0d=[cspice_spkezr('392',FO_prob.t0,'ECLIPJ2000','NONE','Sun'); FO_prob.m0];
+xx0=ADIM(xx0d, FO_prob.m0);
+
+ll0=ACT(FO_prob);
+% ll0=-0.5*rand([7,1]).*rand([7,1]);
+% ll0=[-1.190309383677406e+01
+%      2.192101269754924e+01
+%     -9.118129535072701e-01
+%     -2.384765676541080e+01
+%      6.598595889986683e+00
+%     -4.087044606844957e-03
+%      1.108436362365711e+00];
+
+FO_prob.y0=[xx0; ll0];
+
+z0=[xx0; ll0; reshape(eye(14),[14*14,1])];
+
+FO_prob.epsilon=0.5;
+
+% [tt,zz]=FO_ode78(FO_prob,[0 tf_ad],z0);
+
+fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
+
+[ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,FO_prob),ll0,fsopt);
+
+[~,~,FO_prob]=FO_ZFP(ll_FO,FO_prob);
+FO_prob=DispRes(FO_prob);
+
+% figure
+% plot(tt,zz(:,7))
+% 
+% figure
+% plot3(zz(:,1),zz(:,2),zz(:,3))

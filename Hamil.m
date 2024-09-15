@@ -15,10 +15,35 @@ function [H] = Hamil(tt,zz,prob)
             Ptype='max';
         end
 
-        ff=TO_2BP_SEP(tt(i),zz(i,:).',Ptype);
+        if prob.isFO==1
+
+            if SwFun(tt(i),zz(i,:).',prob.isFO)+prob.epsilon<0
+                utype='on';
+                u=1;
+            elseif SwFun(tt(i),zz(i,:).',prob.isFO)-prob.epsilon>0 || (SwFun(tt(i),zz(i,:).',prob.isFO)+prob.epsilon>=0 && prob.epsilon==0)
+                utype='off';
+                u=0;
+            elseif abs(SwFun(tt(i),zz(i,:).',prob.isFO))-prob.epsilon<=0 && prob.epsilon~=0
+                utype='med';
+                u=(prob.epsilon-SwFun(tt(i),zz(i,:).',prob.isFO))/(2*prob.epsilon);
+            end
+
+            ff=FO_2BP_SEP(tt(i),zz(i,:).',Ptype,utype,prob.epsilon);
+
+        else
+
+            ff=TO_2BP_SEP(tt(i),zz(i,:).',Ptype);
+            u=1;
+
+        end
+
+        Tc=MARGO_param(r);
+        T=Tc(1);
+        c=Tc(2);
+
         ffx=ff(1:7);
         ll=zz(i,8:14).';
-        H(i)=dot(ll,ffx);
+        H(i)=dot(ll,ffx)+prob.isFO*(T/c*(u-u*prob.epsilon*(1-u)));
     end
     
 end

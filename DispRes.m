@@ -24,7 +24,6 @@ function [prob] = DispRes(prob,output)
     m0=prob.m0;
     t0=prob.t0;
     targ=prob.targ;
-    epsilon=prob.epsilon;
 
     Pmin=prob.Plim(1);
     Pmax=prob.Plim(2);
@@ -33,6 +32,7 @@ function [prob] = DispRes(prob,output)
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
     MU=prob.m0;
 
+    tf_ad=prob.tf_ad;
     tf=prob.tf;
 
     y0=prob.y0;
@@ -40,7 +40,15 @@ function [prob] = DispRes(prob,output)
     Phi0=eye(length(y0));
     vPhi0=reshape(Phi0,[length(y0)^2,1]);
 
-    [tt,zz]=TO_ode78(prob,[0 (tf-t0)/TU],[y0; vPhi0]);
+    if prob.isFO==1
+
+        [tt,zz]=FO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+
+    else
+    
+        [tt,zz]=TO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+
+    end
 
     ToF=(tf-t0)/86400;          % [d]
     mf=zz(end,7)*m0;            % [kg]
@@ -61,7 +69,18 @@ function [prob] = DispRes(prob,output)
     TT=(MU*LU)/(TU^2)*TTcc(1,:)*1e6; % [mN]
     II=LU/TU*TTcc(2,:)/g0;
 
-    S=SwFun(tt,zz,epsilon);
+    S=SwFun(tt,zz,prob.isFO);
+
+    if prob.epsilon>0
+
+        u=1.*(S+prob.epsilon<0)+((prob.epsilon-S)/(2*prob.epsilon)).*(abs(S)-prob.epsilon<=0)+0;
+
+    else
+
+        u=1.*(S<0)+0;
+
+    end
+
     H=Hamil(tt,zz,prob);
 
     prob.mf=mf;
@@ -74,10 +93,10 @@ function [prob] = DispRes(prob,output)
 
     if output==1
 
-        plot3D(t0,tt,zz,targ);
+        plot3D(t0,tt,zz,targ,S);
     
-        fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',3),et2MJD2000(t0))
-        fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',3),et2MJD2000(tf))
+        fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',0),et2MJD2000(t0))
+        fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',0),et2MJD2000(tf))
         fprintf('ToF: %.3f days, Final Mass: %.3f kg, Propellant Mass: %.3f kg\n\n',ToF,mf,mp)
     
         fprintf('Position error %.3e km\nVelocity error %.3e km/s\n',norm(df(1:3))*LU, norm(df(4:6))*LU/TU)
@@ -89,7 +108,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(4,2,1)
-        plot(ttd,1.*(S<0)+0)
+        plot(ttd,u)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')
@@ -162,7 +181,7 @@ function [prob] = DispRes(prob,output)
     set(groot,'defaultLegendInterpreter','remove');
 end
 
-function plot3D(t0,tt,zz,targ)
+function plot3D(t0,tt,zz,targ,S)
     
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -170,10 +189,12 @@ function plot3D(t0,tt,zz,targ)
     ttd=tt.'.*TU+t0;
 
     xx_SEL2=cspice_spkezr('392',ttd,'ECLIPJ2000','NONE','Sun');
-    
     rr_SEL2=xx_SEL2(1:3,:)./LU;
 
     rrt=cspice_spkpos(targ,ttd,'ECLIPJ2000','NONE','Sun')./LU;
+
+%     rr_on=zz(S<0,1:3);
+%     rr_off=zz(S>=0,1:3);
     
     figure
     plot3(zz(:,1),zz(:,2),zz(:,3),'r')
