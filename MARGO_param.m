@@ -1,4 +1,4 @@
-function [sc_param, dr_sc_param, P] = MARGO_param(r)
+function [sc_param, dr_sc_param, P, dPdr] = MARGO_param(r)
 % v1 (master)
 
 % adimensional input [AU]
@@ -34,6 +34,9 @@ function [sc_param, dr_sc_param, P] = MARGO_param(r)
     sc_param(1,:)=TU^2/(MU*LU)*Tmax(Pin(r))*1e-6;  % T [-]
     sc_param(2,:)=TU/LU*Isp(Pin(r))*g0;            % c [-]
 
+    P=Sp(r); % [W]
+    dPdr=dPindr(r); % [W/AU]
+
     if Sp(r)<120
 
         dr_sc_param(1,:)=TU^2/(MU*LU)*dTmaxdPin(Pin(r)).*dPindr(r)*1e-6; % dT/dr
@@ -46,8 +49,7 @@ function [sc_param, dr_sc_param, P] = MARGO_param(r)
 
     end
 
-    P=Sp(r); % [W]
-%     dPdr=dPindr(r); % [W/AU]
+    
     
 
 end

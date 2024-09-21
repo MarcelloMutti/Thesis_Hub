@@ -29,7 +29,8 @@ function [df,J,prob] = TO_ZFP(llt,prob)
     Phi0=eye(length(yy0));
     vPhi0=reshape(Phi0,[length(yy0)^2,1]);
 
-    [~,zz] =TO_ode78(prob,[0 tf_ad],[yy0; vPhi0]);
+%     [~,zz] =TO_ode78(prob,[0 tf_ad],[yy0; vPhi0]);
+    [~,zz]=TO_ode87(prob,[0 tf_ad],[yy0; vPhi0]);
 
 
     zzf=zz(end,:).';

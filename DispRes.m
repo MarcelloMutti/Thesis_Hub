@@ -42,11 +42,13 @@ function [prob] = DispRes(prob,output)
 
     if prob.isFO==1
 
-        [tt,zz]=FO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+%         [tt,zz]=FO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+        [tt,zz]=FO_ode87(prob,[0 tf_ad],[y0; vPhi0]);
 
     else
     
-        [tt,zz]=TO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+%         [tt,zz]=TO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+        [tt,zz]=TO_ode87(prob,[0 tf_ad],[y0; vPhi0]);
 
     end
 
@@ -107,7 +109,7 @@ function [prob] = DispRes(prob,output)
         figure
 
         %-throttle---------------------------------------------------------
-        subplot(4,2,1)
+        subplot(4,2,3)
         plot(ttd,u)
         axis tight
         ylim([0 1.1])
@@ -116,7 +118,7 @@ function [prob] = DispRes(prob,output)
         grid minor
 
         %-switching-function-----------------------------------------------
-        subplot(4,2,3)
+        subplot(4,2,5)
         plot(ttd,S)
         axis tight
         ylabel('$S$')
@@ -124,7 +126,7 @@ function [prob] = DispRes(prob,output)
         grid minor
             
         %-mass-------------------------------------------------------------
-        subplot(4,2,5)
+        subplot(4,2,7)
         plot(ttd,zz(:,7)*m0)
         axis tight
         ylabel('$m\,[kg]$')
@@ -132,7 +134,7 @@ function [prob] = DispRes(prob,output)
         grid minor
 
         %-input-power------------------------------------------------------
-        subplot(4,2,2)
+        subplot(4,2,4)
         plot(ttd,P)
         if max(P)>Pmax
             hold on
@@ -148,7 +150,7 @@ function [prob] = DispRes(prob,output)
         grid minor
 
         %-thrust-----------------------------------------------------------
-        subplot(4,2,4)
+        subplot(4,2,6)
         plot(ttd,II)
         axis tight
         ylabel('$I_{sp}\,[s]$')
@@ -156,7 +158,7 @@ function [prob] = DispRes(prob,output)
         grid minor
     
         %-specific-impulse-------------------------------------------------
-        subplot(4,2,6)
+        subplot(4,2,8)
         plot(ttd,TT)
         axis tight
         ylabel('$T_{max}\,[mN]$')
@@ -164,13 +166,19 @@ function [prob] = DispRes(prob,output)
         grid minor
 
         %-hamiltonian------------------------------------------------------
-        subplot(4,2,7:8)
+        subplot(4,2,1)
         plot(ttd,H)
         axis tight
         ylabel('H')
         grid on
         grid minor
-        xlabel('$t [days]$')
+        
+        subplot(4,2,2)
+        plot(ttd,H)
+        axis tight
+        ylabel('H')
+        grid on
+        grid minor
     end
 
     % User plot setting removal
@@ -193,13 +201,15 @@ function plot3D(t0,tt,zz,targ,S)
 
     rrt=cspice_spkpos(targ,ttd,'ECLIPJ2000','NONE','Sun')./LU;
 
-%     rr_on=zz(S<0,1:3);
-%     rr_off=zz(S>=0,1:3);
+    rr_on=zz(S<0,1:3);
+    rr_off=zz(S>=0,1:3);
     
     figure
-    plot3(zz(:,1),zz(:,2),zz(:,3),'r')
+%     plot3(zz(:,1),zz(:,2),zz(:,3),'r')
+    plot3(rr_on(:,1),rr_on(:,2),rr_on(:,3),'r.')
     view([55, 55])
     hold on
+    plot3(rr_off(:,1),rr_off(:,2),rr_off(:,3),'b.')
     plot3(zz(1,1),zz(1,2),zz(1,3),'ob')
     plot3(zz(end,1),zz(end,2),zz(end,3),'kx')
     plot3(0,0,0,'+k')
@@ -221,6 +231,6 @@ function plot3D(t0,tt,zz,targ,S)
     xlabel('$x [AU]$')
     ylabel('$y [AU]$')
     zlabel('$z [AU]$')
-    legend('','SEL2','AST','Sun')
+    legend('','','SEL2','AST','Sun')
 
 end

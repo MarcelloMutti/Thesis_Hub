@@ -27,7 +27,7 @@ function [prob] = TO_t0CONT(prob)
                 ex_flag=0;
                 f=1;
                 atmp=1; % number of rundown attempts
-                tf_gv=linspace(2*pi,4*pi,N); % rundown guesses
+                tf_gv=2*pi*linspace(1,2,N); % rundown guesses
 
                 wb1=waitbar(0,'Generating first solution');
     
@@ -44,9 +44,9 @@ function [prob] = TO_t0CONT(prob)
 
                     f=f+1;
 
-                    if f>N
+                    if f>atmp*N
                         atmp=atmp+1;
-                        tf_gv=linspace(2*pi,4*pi,atmp*N);
+                        tf_gv=2*pi*linspace(1,2,atmp*N);
                         f=1;
                     end
     

@@ -193,3 +193,18 @@ grid on
 grid minor
 axis tight
 title('r bounds')
+
+% tt=prob(1).tt;
+% zz=prob(1).zz;
+% 
+% dt=tt(2:end)-tt(1:end-1);
+% % dz=sqrt(sum((zz(2:end,:)-zz(1:end-1,:)).^2,2));
+% dz=max(abs(zz(2:end,:)-zz(1:end-1,:)),[],2);
+% 
+% figure
+% plot(dt,dz)
+% grid on
+% grid minor
+% axis tight
+% xlabel('step size')
+% ylabel('step error')

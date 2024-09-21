@@ -12,7 +12,8 @@ clear all; close all; clc;
 
 %-shooting-problem-set-up--------------------------------------------------
 
-str_wo='2022-12-31 12:00 UTC';
+str_wo='2022-12-31 12:00 UTC';clc
+
 str_wc='2024-12-31 12:00 UTC';
 
 targ='3550232';
@@ -46,44 +47,45 @@ addpath('FO_dyn')
 LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
-FO_prob.t0=t_wo+0*86400;
-Tof=500;
-% 391.845
-tf_ad=Tof*86400/TU;
-
-FO_prob.tf_ad=tf_ad;
-FO_prob.tf=FO_prob.t0+tf_ad*TU;
-
-xx0d=[cspice_spkezr('392',FO_prob.t0,'ECLIPJ2000','NONE','Sun'); FO_prob.m0];
-xx0=ADIM(xx0d, FO_prob.m0);
-
-ll0=ACT(FO_prob);
-% ll0=-0.5*rand([7,1]).*rand([7,1]);
-% ll0=[-1.190309383677406e+01
-%      2.192101269754924e+01
-%     -9.118129535072701e-01
-%     -2.384765676541080e+01
-%      6.598595889986683e+00
-%     -4.087044606844957e-03
-%      1.108436362365711e+00];
-
-FO_prob.y0=[xx0; ll0];
-
-z0=[xx0; ll0; reshape(eye(14),[14*14,1])];
-
-FO_prob.epsilon=0.5;
-
-% [tt,zz]=FO_ode78(FO_prob,[0 tf_ad],z0);
-
-fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
-
-[ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,FO_prob),ll0,fsopt);
-
-[~,~,FO_prob]=FO_ZFP(ll_FO,FO_prob);
-FO_prob=DispRes(FO_prob);
-
-% figure
-% plot(tt,zz(:,7))
+% % Single solution
+% FO_prob.t0=t_wo+0*86400;
+% Tof=1095;
+% % 391.845
+% tf_ad=Tof*86400/TU;
 % 
-% figure
-% plot3(zz(:,1),zz(:,2),zz(:,3))
+% FO_prob.tf_ad=tf_ad;
+% FO_prob.tf=FO_prob.t0+tf_ad*TU;
+% 
+% xx0d=[cspice_spkezr('392',FO_prob.t0,'ECLIPJ2000','NONE','Sun'); FO_prob.m0];
+% xx0=ADIM(xx0d, FO_prob.m0);
+% 
+% ll0=ACT(FO_prob);
+% % ll0=-0.5*rand([7,1]).*rand([7,1]);
+% % ll0=[6.703257711968917e-01
+% %     -5.127666636081690e-01
+% %      1.449497544940961e-02
+% %      5.919420522718783e-01
+% %      4.741306434873093e-02
+% %     -3.671240124429167e-03
+% %      1.000000000000000e+00];
+% 
+% FO_prob.y0=[xx0; ll0];
+% 
+% z0=[xx0; ll0; reshape(eye(14),[14*14,1])];
+% 
+% FO_prob.epsilon=1.0;
+% 
+% % [tt,zz]=FO_ode78(FO_prob,[0 tf_ad],z0);
+% 
+% fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
+% 
+% [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,FO_prob),ll0,fsopt);
+% 
+% [~,~,FO_prob]=FO_ZFP(ll_FO,FO_prob);
+% FO_prob=DispRes(FO_prob);
+
+load('2010UE51.mat');
+
+EO_prob=FO_CONT(FO_prob,TO_prob);
+
+
