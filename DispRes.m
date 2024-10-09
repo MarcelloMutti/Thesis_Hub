@@ -138,11 +138,11 @@ function [prob] = DispRes(prob,output)
         plot(ttd,P)
         if max(P)>Pmax
             hold on
-            plot([ttd(1) ttd(end)],[Pmax,Pmax])
+            plot([ttd(1) ttd(end)],[Pmax,Pmax],'r')
         end
         if min(P)<Pmin
             hold on
-            plot([ttd(1) ttd(end)],[Pmin,Pmin])
+            plot([ttd(1) ttd(end)],[Pmin,Pmin],'r')
         end
         axis tight
         ylabel('$P_{in}\,[W]$')
@@ -179,7 +179,83 @@ function [prob] = DispRes(prob,output)
         ylabel('H')
         grid on
         grid minor
+
+        figure
+
+        %-throttle---------------------------------------------------------
+        subplot(3,2,1)
+        plot(ttd,u)
+        axis tight
+        ylim([0 1.1])
+        ylabel('$u$')
+        grid on
+        grid minor
+
+        %-switching-function-----------------------------------------------
+        subplot(3,2,3)
+        plot(ttd,S)
+        axis tight
+        ylabel('$S$')
+        grid on
+        grid minor
+            
+        %-mass-------------------------------------------------------------
+        subplot(3,2,5)
+        plot(ttd,zz(:,7)*m0)
+        axis tight
+        ylabel('$m\,[kg]$')
+        grid on
+        grid minor
+
+        %-input-power------------------------------------------------------
+        subplot(3,2,2)
+        plot(ttd,P)
+        if max(P)>Pmax
+            hold on
+            plot([ttd(1) ttd(end)],[Pmax,Pmax],'r')
+        end
+        if min(P)<Pmin
+            hold on
+            plot([ttd(1) ttd(end)],[Pmin,Pmin],'r')
+        end
+        axis tight
+        ylabel('$P_{in}\,[W]$')
+        grid on
+        grid minor
+
+        %-thrust-----------------------------------------------------------
+        subplot(3,2,4)
+        plot(ttd,II)
+        axis tight
+        ylabel('$I_{sp}\,[s]$')
+        grid on
+        grid minor
+    
+        %-specific-impulse-------------------------------------------------
+        subplot(3,2,6)
+        plot(ttd,TT)
+        axis tight
+        ylabel('$T_{max}\,[mN]$')
+        grid on
+        grid minor
+
+%         %-hamiltonian------------------------------------------------------
+%         subplot(4,2,1)
+%         plot(ttd,H)
+%         axis tight
+%         ylabel('H')
+%         grid on
+%         grid minor
+%         
+%         subplot(4,2,2)
+%         plot(ttd,H)
+%         axis tight
+%         ylabel('H')
+%         grid on
+%         grid minor
     end
+
+
 
     % User plot setting removal
     set(0,'DefaultAxesFontSize','remove');

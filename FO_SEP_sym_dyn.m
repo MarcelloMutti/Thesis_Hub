@@ -37,53 +37,76 @@ function FO_SEP_sym_dyn(prob)
     T=dot(P.^(0:4),ap);         % [mN]
     I=dot(P.^(0:4),bp);         % [s]
     
-    T=cf*T*TU^2/(MU*LU);  % [-]
-    c=g0*I*TU/LU;         % [-]
+    dP=dot(norm(rr).^(0:3),(1:4).*cp(2:end));
+    dT=dot(P.^(0:3),(1:4).*ap(2:end));
+    dI=dot(P.^(0:3),(1:4).*bp(2:end));    
     
-    g=-rr/norm(rr)^3;
-    h=zeros(3,1);
+    T=cf*T*TU^2/(MU*LU);  % [-]
+    I=I/TU;               % [-]
+
+%     dT=cf*dT*TU^2/(MU*LU);
+%     dI=dI*TU;
+
+    tr=cf*TU^2/(MU*LU)*dT*dP*rr/norm(rr);
+    ir=1/TU*dI*dP*rr/norm(rr);
+    c=I*TU^2/LU*g0;
+
+%     g=-rr/norm(rr)^3;
+%     h=zeros(3,1);
 
     %-thrust-on------------------------------------------------------------
     u=1;
     
-    ffx=[vv;
-         g+h-u*llv/norm(llv)*T/m;
-         -u*T/c];
+    FF_med_uon=[vv;
+        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
+        -u*T/(c);
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
+        -llr;
+        -u*norm(llv)*T/m^2];
     
-    Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-    
-    ffl=-jacobian(Hamil,[rr; vv; m]).';
-    
-    FF_med_uon=[ffx; ffl];
+%     Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
+%     
+%     ffl=-jacobian(Hamil,[rr; vv; m]).';
+%     
+%     FF_med_uon=[ffx; ffl];
+
     A_med_uon=jacobian(FF_med_uon,y);
 
     %-thrust-off-----------------------------------------------------------
     u=0;
 
-    ffx=[vv;
-     g+h-u*llv/norm(llv)*T/m;
-     -u*T/c];
+    FF_med_uoff=[vv;
+        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
+        -u*T/(c);
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
+        -llr;
+        -u*norm(llv)*T/m^2];
     
-    Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-    
-    ffl=-jacobian(Hamil,[rr; vv; m]).';
-    
-    FF_med_uoff=[ffx; ffl];
+%     Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
+%     
+%     ffl=-jacobian(Hamil,[rr; vv; m]).';
+%     
+%     FF_med_uon=[ffx; ffl];
+
     A_med_uoff=jacobian(FF_med_uoff,y);
 
     %-thrust-med-----------------------------------------------------------
     Se=-norm(llv)*c/m-lm+1;
     u=(epsilon-Se)/(2*epsilon);
     
-    ffx=[vv;
-         g+h-u*llv/norm(llv)*T/m;
-         -u*T/c];
+    FF_med_umed=[vv;
+        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
+        -u*T/(c);
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
+        -llr;
+        -u*norm(llv)*T/m^2];
     
-    Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-    
-    ffl=-jacobian(Hamil,[rr; vv; m]).';
-    
-    FF_med_umed=[ffx; ffl];
+%     Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
+%     
+%     ffl=-jacobian(Hamil,[rr; vv; m]).';
+%     
+%     FF_med_uon=[ffx; ffl];
+
     A_med_umed=jacobian(FF_med_umed,y);
 
 
@@ -94,53 +117,59 @@ function FO_SEP_sym_dyn(prob)
     T=dot(P.^(0:4),ap);         % [mN]
     I=dot(P.^(0:4),bp);         % [s]
     
-    T=cf*T*TU^2/(MU*LU);  % [-]
-    c=g0*I*TU/LU;         % [-]
+%     dP=dot(norm(rr).^(0:3),(1:4).*cp(1:4));
+%     dT=dot(P.^(0:4),(1:4).*ap(1:4));
+%     dI=dot(P.^(0:4),(1:4).*bp(1:4));    
     
-    g=-rr/norm(rr)^3;
-    h=zeros(3,1);
+    T=cf*T*TU^2/(MU*LU);  % [-]
+    I=I/TU;               % [-]
+    c=I*TU^2/LU*g0;
+
+%     dT=cf*dT*TU^2/(MU*LU);
+%     dI=dI*TU;
+% 
+%     tr=zeros(3,1);
+%     ir=zeros(3,1);
+%     g0=TU^2/LU*g0;
+% 
+%     g=-rr/norm(rr)^3;
+%     h=zeros(3,1);
 
     %-thrust-on------------------------------------------------------------
     u=1;
     
-    ffx=[vv;
-         g+h-u*llv/norm(llv)*T/m;
-         -u*T/c];
+    FF_max_uon=[vv;
+        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
+        -u*T/(c);
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
+        -llr;
+        -u*norm(llv)*T/m^2];
     
-    Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-    
-    ffl=-jacobian(Hamil,[rr; vv; m]).';
-    
-    FF_max_uon=[ffx; ffl];
     A_max_uon=jacobian(FF_max_uon,y);
 
     %-thrust-off-----------------------------------------------------------
     u=0;
 
-    ffx=[vv;
-         g+h-u*llv/norm(llv)*T/m;
-         -u*T/c];
-    
-    Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-    
-    ffl=-jacobian(Hamil,[rr; vv; m]).';
-    
-    FF_max_uoff=[ffx; ffl];
+    FF_max_uoff=[vv;
+        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
+        -u*T/(c);
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
+        -llr;
+        -u*norm(llv)*T/m^2];
+
     A_max_uoff=jacobian(FF_max_uoff,y);
 
     %-thrust-med-----------------------------------------------------------
     Se=-norm(llv)*c/m-lm+1;
     u=(epsilon-Se)/(2*epsilon);
     
-    ffx=[vv;
-         g+h-u*llv/norm(llv)*T/m;
-         -u*T/c];
-    
-    Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-    
-    ffl=-jacobian(Hamil,[rr; vv; m]).';
-    
-    FF_max_umed=[ffx; ffl];
+    FF_max_umed=[vv;
+        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
+        -u*T/(c);
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
+        -llr;
+        -u*norm(llv)*T/m^2];
+
     A_max_umed=jacobian(FF_max_umed,y);
     
 

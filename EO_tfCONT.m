@@ -8,7 +8,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
     it=1;
     L=length(prob);
 
-    Dt_max=15; % [days]
+    Dt_max=45; % [days]
 
     iscomplete=0;
     skip=0;
@@ -146,13 +146,13 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
                     ll_g=prob(L+it-1).y0(8:14)+(prob(L+it).tf_ad-prob(L+it-1).tf_ad)*(prob(L+it-1).y0(8:14)-prob(L+it-2).y0(8:14))/(prob(L+it-1).tf_ad-prob(L+it-2).tf_ad);            
                    
-                elseif rem(f,4)==2 && it>=4 % attempt 2NPCM
+                elseif rem(f,4)==2 && it>=3 % attempt 2NPCM
 
                     yy=[prob(L+it-3:L+it-1).y0];
                     ll=yy(8:14,:);
                     ll_g=makima([prob(L+it-3:L+it-1).tf_ad],ll,prob(L+it).tf_ad);
 
-                elseif rem(f,4)==3 && it>=5 % attempt 3NPCM
+                elseif rem(f,4)==3 && it>=4 % attempt 3NPCM
 
                     yy=[prob(L+it-4:L+it-1).y0];
                     ll=yy(8:14,:);
@@ -196,6 +196,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
         if prob(L+it).tf_ad==TO_ref(id).tf_ad
 
             iscomplete=1;
+            prob(end).sts='TO';
 
         end
 
@@ -203,6 +204,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             iscomplete=1;
             prob=prob(1:end-1);
+            prob(end).sts='skp';
 
         end
 

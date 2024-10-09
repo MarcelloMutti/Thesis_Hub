@@ -24,17 +24,18 @@ for i=1:length(prob)
 end
 
 figure
-plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
+plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'.','linewidth',2)
 hold on
-plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
+% plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
 grid on
 grid minor
 axis tight
 ylim([100 1100])
-title('tf')
+xlabel('$$t_0\,[MJD2000]$$','Interpreter','latex')
+ylabel('$$ToF\,[d]$$','Interpreter','latex')
 
 figure
-plot([prob.tf_ad]*TU/86400,[prob.mp],'LineWidth',2)
+plot([prob.tf_ad]*TU/86400,[prob.mp],'.','LineWidth',2)
 hold on
 plot([prob(isPareto).tf_ad]*TU/86400,[prob(isPareto).mp],'xk','LineWidth',2)
 grid on
@@ -44,9 +45,9 @@ xlabel('tf')
 ylabel('mp')
 
 figure
-plot(et2MJD2000([prob.t0]),[prob.tf_ad]/max([prob.tf_ad]),'r','linewidth',2)
+plot(et2MJD2000([prob.t0]),[prob.tf_ad]/max([prob.tf_ad]),'r.','linewidth',2)
 hold on
-plot(et2MJD2000([prob.t0]),[prob.mp]/max([prob.mp]),'b','linewidth',2)
+plot(et2MJD2000([prob.t0]),[prob.mp]/max([prob.mp]),'b.','linewidth',2)
 grid on
 grid minor
 axis tight
@@ -208,3 +209,50 @@ title('r bounds')
 % axis tight
 % xlabel('step size')
 % ylabel('step error')
+
+xlin=linspace(min([prob.t0]),max([prob.t0]),100);
+ylin=linspace(min([prob.tf_ad]),max([prob.tf_ad]),100);
+[X,Y]=meshgrid(xlin,ylin);
+Z=griddata([prob.t0],[prob.tf_ad],[prob.mp],X,Y,'cubic');
+figure
+contour(X,Y,Z,'fill','on')
+
+prob_TO=prob(strcmp({prob.sts},'TO'));
+prob_SK=prob(strcmp({prob.sts},'skp'));
+
+prob_TOEO=[prob_TO prob_SK];
+
+y0TOEO=[prob_TOEO.y0];
+l0TOEO=y0TOEO(8:14,:);
+
+prob_TOTO=TO_ref(1:(length(prob_TO)+length(prob_SK)));
+
+y0TOTO=[prob_TOTO.y0];
+l0TOTO=y0TOTO(8:14,:);
+
+gamma=l0TOEO./l0TOTO;
+
+llm0=y0TOEO(14,:);
+
+figure
+subplot(2,2,1)
+plot(et2MJD2000([prob_TOEO.t0]),gamma.')
+grid on
+grid minor
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\gamma=\lambda^{EO}_0/\lambda^{TO}_0$$','Interpreter','latex')
+
+subplot(2,2,3)
+plot(et2MJD2000([prob_TOEO.t0]),llm0)
+grid on
+grid minor
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\lambda^{EO}_{m,0}$$','Interpreter','latex')
+
+subplot(2,2,[2,4])
+plot(et2MJD2000([prob_TOEO.t0]),mean(gamma)./llm0)
+grid on
+grid minor
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\frac{\gamma}{\lambda^{EO}_{m,0}}$$','Interpreter','latex')
+

@@ -34,14 +34,17 @@ function [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,utype,epsilon)
         if strcmp(utype,'on')
 
             [dy,A]=FO_med_uon_dz(y,MP,U,g0,epsilon);
+%             [dy2,A2]=FO_med_uon_dz_2(y,MP,U,g0,epsilon);
 
         elseif strcmp(utype,'med')
 
             [dy,A]=FO_med_umed_dz(y,MP,U,g0,epsilon);
+%             [dy2,A2]=FO_med_umed_dz_2(y,MP,U,g0,epsilon);
 
         elseif strcmp(utype,'off')
 
             [dy,A]=FO_med_uoff_dz(y,MP,U,g0,epsilon);
+%             [dy2,A2]=FO_med_uoff_dz_2(y,MP,U,g0,epsilon);
 
         end
 
@@ -50,14 +53,17 @@ function [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,utype,epsilon)
         if strcmp(utype,'on')
 
             [dy,A]=FO_max_uon_dz(y,MP,U,g0,epsilon);
+%             [dy2,A2]=FO_max_uon_dz_2(y,MP,U,g0,epsilon);
 
         elseif strcmp(utype,'med')
 
             [dy,A]=FO_max_umed_dz(y,MP,U,g0,epsilon);
+%             [dy2,A2]=FO_max_umed_dz_2(y,MP,U,g0,epsilon);
 
         elseif strcmp(utype,'off')
 
             [dy,A]=FO_max_uoff_dz(y,MP,U,g0,epsilon);
+%             [dy2,A2]=FO_max_uoff_dz_2(y,MP,U,g0,epsilon);
 
         end
 

@@ -32,10 +32,12 @@ function [dy,A]=TO_SEP_dz(y,MP,U,g0,Ptype)
     if strcmp(Ptype,'med')
 
         [dy,A]=TO_med_dz(y,MP,U,g0);
+%         [dy2,A2]=TO_med_dz_2(y,MP,U,g0);
 
     elseif strcmp(Ptype,'max')
 
         [dy,A]=TO_max_dz(y,MP,U,g0);
+%         [dy2,A2]=TO_max_dz_2(y,MP,U,g0);
 
     end
 

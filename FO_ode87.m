@@ -21,7 +21,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 %     
 %      b7 = [ 13451932/455176623, 0, 0, 0, 0, -808719846/976000145, 1757004468/5645159321, 656045339/265891186,   -3867574721/1518517206,   465885868/322736535,  53011238/667516719,                  2/45,    0]';
     
-    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-8,'OptimalityTolerance',1e-8,'Display','none');
+    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
 
     pow = 1/8; % power for step control
     
@@ -143,15 +143,31 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                     h=h*0.75;
     
                 else    % single switch
+
+%                     n=20;
+%                     i=1;
+                    ex_flag=0;
+                    tg=t+h/2;
     
-                    if ~strcmp(Ptype,Ptype_old) % power switch
-        
-                        tc=fzero(@(T) power_switching(T,t,z,Ptype_old,utype_old,ep,prob),[t,t+h]);
-        
-                    elseif ~strcmp(utype,utype_old) % throttle switch
-        
-                        tc=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,ep,prob),t,fopt);
-        
+                    while ex_flag<=0
+
+                        if ~strcmp(Ptype,Ptype_old) % power switch
+            
+                            tc=fsolve(@(T) power_switching(T,t,z,Ptype_old,utype_old,ep,prob),tg,fopt);
+            
+                        elseif ~strcmp(utype,utype_old) % throttle switch
+            
+                            tc=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,ep,prob),tg,fopt);
+            
+                        end
+
+                        if tc<=t || tc>=t+h
+                            ex_flag=0;
+                            tg=t+h*rand(1,1);
+                        else
+                            ex_flag=1;
+                        end
+
                     end
     
 %                     if tc>t
@@ -298,7 +314,7 @@ function [x7,x8]=step(t,z,h,Ptype,utype,ep)
 end
 
 
-function [f]=power_switching(tc,tk,zk,Ptype,utype,ep,prob)
+function [f,df]=power_switching(tc,tk,zk,Ptype,utype,ep,prob)
 
 %     if tk~=tc
 %         opt=odeset('RelTol',1e-12,'AbsTol',1e-12);
@@ -313,7 +329,12 @@ function [f]=power_switching(tc,tk,zk,Ptype,utype,ep,prob)
     
     [~,zc]=step(tk,zk,h,Ptype,utype,ep);
 
-    [~,~,Sp]=MARGO_param(norm(zc(1:3)));
+    rc=zc(1:3);
+    vc=zc(4:6);
+
+    [~,~,Sp,dPdr]=MARGO_param(norm(rc));
+
+    df=dPdr*dot(rc,vc)/norm(rc);
 
     f=Sp-prob.Plim(2);
 

@@ -21,6 +21,8 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
 %     
 %      b7 = [ 13451932/455176623, 0, 0, 0, 0, -808719846/976000145, 1757004468/5645159321, 656045339/265891186,   -3867574721/1518517206,   465885868/322736535,  53011238/667516719,                  2/45,    0]';
     
+
+    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
     
     pow = 1/8; % power for step control
     
@@ -112,14 +114,28 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
 
             if ~strcmp(Ptype,Ptype_old)
 
-                tc=fzero(@(T) power_switching(T,t,z,Ptype_old,prob),[t,t+h]);
+                ex_flag=0;
+                tg=t+h/2;
+
+                while ex_flag<=0
+
+                    tc=fsolve(@(T) power_switching(T,t,z,Ptype_old,prob),tg,fopt);
+
+                    if tc<=t || tc>=t+h
+                        ex_flag=0;
+                        tg=t+h*rand(1,1);
+                    else
+                        ex_flag=1;
+                    end
+
+                end
     
 %                 odopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
 %                 [~,zz]=ode78(@(t,y) TO_2BP_SEP(t,y,Ptype_old),[t,tc],z,odopt);
 %     
 %                 zc=zz(end,:).';
 
-                [~,zc]=step(t,z,tc-z,Ptype_old);
+                [~,zc]=step(t,z,tc-t,Ptype_old);
     
                 rc=zc(1:3);
                 vc=zc(4:6);
@@ -231,7 +247,7 @@ function [x7,x8]=step(t,z,h,Ptype)
 end
 
 
-function [f]=power_switching(tc,tk,zk,Ptype,prob)
+function [f,df]=power_switching(tc,tk,zk,Ptype,prob)
 
 %     if tk~=tc
 %         opt=odeset('RelTol',1e-12,'AbsTol',1e-12);
@@ -246,7 +262,12 @@ function [f]=power_switching(tc,tk,zk,Ptype,prob)
     
     [~,zc]=step(tk,zk,h,Ptype);
 
-    [~,~,Sp]=MARGO_param(norm(zc(1:3)));
+    rc=zc(1:3);
+    vc=zc(4:6);
+
+    [~,~,Sp,dPdr]=MARGO_param(norm(rc));
+
+    df=dPdr*dot(rc,vc)/norm(rc);
 
     f=Sp-prob.Plim(2);
 

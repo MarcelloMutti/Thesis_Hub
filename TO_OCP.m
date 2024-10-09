@@ -17,7 +17,7 @@ clear all; close all; clc;
 str_wo='2022-12-31 12:00 UTC';
 str_wc='2024-12-31 12:00 UTC';
 
-targ='3702319';
+targ='3054374';
 m0=22.6;  % [kg]
 Pmax=120; % [W]
 Pmin=20;  % [W]
@@ -42,7 +42,8 @@ t_wc=cspice_str2et(str_wc); % [9131.5 mjd2000]
 
 TO_prob=struct_assembly(targ,[t_wo t_wc],m0,[Pmin Pmax],isFO);
 
-% TO_SEP_sym_dyn(prob); % to KEEP
+% TO_SEP_sym_dyn2(TO_prob);
+% TO_SEP_sym_dyn(TO_prob); % to KEEP
 addpath('TO_dyn')
 
 LU=cspice_convrt(1,'AU','KM');              % 1AU [km]

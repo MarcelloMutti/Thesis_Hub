@@ -130,10 +130,19 @@ function [prob] = EO_t0CONT(prob,TO_ref)
             prob(it+1)=prob(it);
         end
 
+%         if it==2
+%             [ll_FO,prob(it)]=E2F_CONT(prob(it));
+%         end
+
 
         [~,~,prob(it)]=FO_ZFP(ll_FO,prob(it));
 
         prob(it)=DispRes(prob(it),0);
+
+%         if it==2
+%             prob(1)=E2F_CONT(prob(1));
+%             prob(2)=E2F_CONT(prob(2));
+%         end
 
 %         if it==1   % EO -> FO
 % 
