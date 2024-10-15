@@ -26,7 +26,7 @@ end
 figure
 plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'.','linewidth',2)
 hold on
-% plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
+plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
 grid on
 grid minor
 axis tight
@@ -210,17 +210,45 @@ title('r bounds')
 % xlabel('step size')
 % ylabel('step error')
 
-xlin=linspace(min([prob.t0]),max([prob.t0]),100);
-ylin=linspace(min([prob.tf_ad]),max([prob.tf_ad]),100);
+xlin=et2MJD2000(linspace(min([prob.t0]),max([prob.t0]),length(prob)/10));
+ylin=TU/86400*(linspace(min([prob.tf_ad]),max([prob.tf_ad]),length(prob)/10));
+
+K=boundary([prob.t0].',[prob.tf_ad].',0.95); % specify manually
+
+% K=[];
+% for i=1:length(TO_ref)
+%     di=find([prob.t0]==TO_ref(i).t0);
+%     if i==1 || i==length(TO_ref)
+%         K=[K, di];
+%     else
+%         K=[K, di(1), di(end)];
+%     end
+% end
+% [~,oid]=sort(K);
+% K=K(oid);
+
 [X,Y]=meshgrid(xlin,ylin);
-Z=griddata([prob.t0],[prob.tf_ad],[prob.mp],X,Y,'cubic');
+Z=griddata(et2MJD2000([prob.t0]),TU/86400*([prob.tf_ad]),[prob.mp],X,Y,'linear');
+[in,on]=inpolygon(X,Y,et2MJD2000([prob(K).t0]),TU/86400*([prob(K).tf_ad]));
+Z(~in)=NaN;
+
 figure
-contour(X,Y,Z,'fill','on')
+contourf(X,Y,Z,min([prob.mp]):0.3:max([prob.mp]),'fill','on')
+c=colorbar;
+hold on
+contour(X,Y,Z,[2.8 2.8],'k--','LineWidth',2)
+plot(et2MJD2000([TO_ref.t0]),TU/86400*([TO_ref.tf_ad]),'r','LineWidth',2)
+xlabel('$$t_0\, [MJD2000]$$','Interpreter','latex')
+ylabel('$$ToF\, [days]$$','Interpreter','latex')
+c.Label.String='mp';
+
 
 prob_TO=prob(strcmp({prob.sts},'TO'));
 prob_SK=prob(strcmp({prob.sts},'skp'));
 
 prob_TOEO=[prob_TO prob_SK];
+[~,oid]=sort([prob_TOEO.t0]);
+prob_TOEO=prob_TOEO(oid);
 
 y0TOEO=[prob_TOEO.y0];
 l0TOEO=y0TOEO(8:14,:);
@@ -255,4 +283,3 @@ grid on
 grid minor
 xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
 ylabel('$$\frac{\gamma}{\lambda^{EO}_{m,0}}$$','Interpreter','latex')
-

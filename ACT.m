@@ -19,13 +19,13 @@ function [ll0] = ACT(prob)
     r=norm(rr);
     v=norm(vv);
     
-    a=unifrnd(-0.1, 0.1);
-    da=unifrnd(-0.1, 0.1);
-    b=unifrnd(-0.1, 0.1);
-    db=unifrnd(-0.1, 0.1);
+    a=rad2deg(unifrnd(-10, 10));
+    da=rad2deg(unifrnd(-5, 5));
+    b=rad2deg(unifrnd(-1, 1));
+    db=rad2deg(unifrnd(-0.1, 0.1));
 
     S=unifrnd(-1, 0)+(prob.isFO-1);
-    dS=unifrnd(-1, 1);
+    dS=unifrnd(-0.01, 0.01);
     
     lm=1;
 %     lm=unifrnd(0,1);

@@ -89,17 +89,17 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
             while ex_flag<=0
 
-                if rem(f,4)==1 % attempt 1NPCM
+                if f==1 % attempt 1NPCM
 
                     llg=prob(it-1).y0(8:14)+(prob(it).t0-prob(it-1).t0)*(prob(it-1).y0(8:14)-prob(it-2).y0(8:14))/(prob(it-1).t0-prob(it-2).t0);            
                    
-                elseif rem(f,4)==2 && it>=4 % attempt 2NPCM
+                elseif f==2 && it>=4 % attempt 2NPCM
 
                     yy=[prob(it-3:it-1).y0];
                     ll=yy(8:14,:);
                     llg=makima([prob(it-3:it-1).t0],ll,prob(it).t0);
 
-                elseif rem(f,4)==3 && it>=5 % attempt 3NPCM
+                elseif f==3 && it>=5 % attempt 3NPCM
 
                     yy=[prob(it-4:it-1).y0];
                     ll=yy(8:14,:);
@@ -130,9 +130,6 @@ function [prob] = EO_t0CONT(prob,TO_ref)
             prob(it+1)=prob(it);
         end
 
-%         if it==2
-%             [ll_FO,prob(it)]=E2F_CONT(prob(it));
-%         end
 
 
         [~,~,prob(it)]=FO_ZFP(ll_FO,prob(it));
@@ -143,6 +140,9 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 %             prob(1)=E2F_CONT(prob(1));
 %             prob(2)=E2F_CONT(prob(2));
 %         end
+
+
+
 
 %         if it==1   % EO -> FO
 % 

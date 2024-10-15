@@ -1,6 +1,6 @@
 function [prob]=EO_tfCONT(prob,TO_ref,id)
 
-    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
+    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-9,'FunctionTolerance',1e-9,'MaxIterations',2e2);
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -8,7 +8,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
     it=1;
     L=length(prob);
 
-    Dt_max=45; % [days]
+    Dt_max=30; % [days]
 
     iscomplete=0;
     skip=0;
@@ -23,8 +23,8 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
             f=1;
 
             while ex_flag<=0
-
-                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(id).tf_ad-(Dt_max/f)*84600/TU);
+                
+                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(id).tf_ad-(Dt_max/(2^(f-1)))*86400/TU);
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
                 if rem(f,2)==1 % attempt 0NPCM (alternates with act)
@@ -101,7 +101,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             while ex_flag<=0
 
-                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-(Dt_max/f)*84600/TU);
+                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-DT/(2^(f-1)));
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
                 if rem(f,2)==1 % attempt 1NPCM
@@ -139,7 +139,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             while ex_flag<=0
 
-                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-(Dt_max/f)*84600/TU);
+                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-DT/(2^(f-1)));
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
                 if rem(f,4)==1 % attempt 1NPCM
@@ -190,8 +190,11 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
         prob(L+it)=DispRes(prob(L+it),0);
 
 %         prob(L+it+1)=prob(L+it);
-
-
+        if it==1
+            DT=min(1.25*(prob(L+it).tf_ad-TO_ref(id).tf_ad),Dt_max*86400/TU);
+        else
+            DT=max(min(1.25*(prob(L+it-1).tf_ad-prob(L+it).tf_ad),Dt_max*86400/TU),1*86400/TU);
+        end
 
         if prob(L+it).tf_ad==TO_ref(id).tf_ad
 

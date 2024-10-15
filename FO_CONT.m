@@ -9,6 +9,7 @@ function [prob]=FO_CONT(prob,TO_ref)
     for id=1:L
 
         prob=EO_tfCONT(prob,TO_ref,id);
+        prob(end).isTO=1;
 
     end
 

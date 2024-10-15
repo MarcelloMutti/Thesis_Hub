@@ -75,7 +75,7 @@ function [prob] = DispRes(prob,output)
 
     if prob.epsilon>0
 
-        u=1.*(S+prob.epsilon<0)+((prob.epsilon-S)/(2*prob.epsilon)).*(abs(S)-prob.epsilon<=0)+0;
+        u=1/2*(1-tanh(S./prob.epsilon));
 
     else
 
@@ -95,7 +95,7 @@ function [prob] = DispRes(prob,output)
 
     if output==1
 
-        plot3D(t0,tt,zz,targ,S);
+        plot3D(t0,tt,zz,targ,u);
     
         fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',0),et2MJD2000(t0))
         fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',0),et2MJD2000(tf))
@@ -265,7 +265,7 @@ function [prob] = DispRes(prob,output)
     set(groot,'defaultLegendInterpreter','remove');
 end
 
-function plot3D(t0,tt,zz,targ,S)
+function plot3D(t0,tt,zz,targ,u)
     
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -277,20 +277,22 @@ function plot3D(t0,tt,zz,targ,S)
 
     rrt=cspice_spkpos(targ,ttd,'ECLIPJ2000','NONE','Sun')./LU;
 
-    rr_on=zz(S<0,1:3);
-    rr_off=zz(S>=0,1:3);
+%     rr_on=zz(S<0,1:3);
+%     rr_off=zz(S>=0,1:3);
+
+    L=length(u);
     
     figure
-%     plot3(zz(:,1),zz(:,2),zz(:,3),'r')
-    plot3(rr_on(:,1),rr_on(:,2),rr_on(:,3),'r.')
-    view([55, 55])
-    hold on
-    plot3(rr_off(:,1),rr_off(:,2),rr_off(:,3),'b.')
     plot3(zz(1,1),zz(1,2),zz(1,3),'ob')
+    hold on
     plot3(zz(end,1),zz(end,2),zz(end,3),'kx')
     plot3(0,0,0,'+k')
     plot3(rr_SEL2(1,:),rr_SEL2(2,:),rr_SEL2(3,:),'color',[.8 .8 .8],'LineWidth',0.1)
     plot3(rrt(1,:),rrt(2,:),rrt(3,:),'color',[.8 .8 .8],'LineWidth',0.1)
+    for i=1:L-1
+        line([zz(i,1), zz(i+1,1)],[zz(i,2), zz(i+1,2)],[zz(i,3), zz(i+1,3)],'color',[u(i) 0 1-u(i)],'linewidth',u(i)+1);
+    end
+    view([55, 55])    
     xlim([-1.5 1.5])
     ylim([-1.5 1.5])
 
@@ -307,6 +309,6 @@ function plot3D(t0,tt,zz,targ,S)
     xlabel('$x [AU]$')
     ylabel('$y [AU]$')
     zlabel('$z [AU]$')
-    legend('','','SEL2','AST','Sun')
+    legend('SEL2','AST','Sun')
 
 end

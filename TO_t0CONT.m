@@ -12,7 +12,7 @@ function [prob] = TO_t0CONT(prob)
 
     prob(it).t0=t_wo;
 
-    Dt_max=1; % [days]
+    Dt_max=30; % [days]
     Dt_iter=86400;
     N=25;
 

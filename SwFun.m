@@ -27,7 +27,7 @@ function [S] = SwFun(tt,zz,isFO)
     
         lv=norm(llv);
         
-        S(i)=-m.*lv./c-lm+isFO;
+        S(i)=-lv.*c./m-lm+isFO;
     
     end
 

@@ -1,8 +1,8 @@
 function [tout,xout] = FO_ode87(prob,tspan,z0)
 
-   
-%     % The coefficients of method
-%     C=  [ 1/18, 1/12, 1/8, 5/16, 3/8, 59/400, 93/200, 5490023248/9719169821, 13/20, 1201146811/1299019798, 1, 1]';
+    
+    % The coefficients of method
+%     c=  [ 1/18, 1/12, 1/8, 5/16, 3/8, 59/400, 93/200, 5490023248/9719169821, 13/20, 1201146811/1299019798, 1, 1]';
 %     
 %     A = [ 1/18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0; 
 %               1/48, 1/16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0; 
@@ -21,8 +21,9 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 %     
 %      b7 = [ 13451932/455176623, 0, 0, 0, 0, -808719846/976000145, 1757004468/5645159321, 656045339/265891186,   -3867574721/1518517206,   465885868/322736535,  53011238/667516719,                  2/45,    0]';
     
-    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
 
+    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
+    
     pow = 1/8; % power for step control
     
     % Check inputs
@@ -60,8 +61,6 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
     xout = z.';
     
     % initial sw eval-----------------------
-    ep=prob.epsilon;
-
     r=norm(z(1:3));
     [~,~,Sp]=MARGO_param(r);
     if Sp<prob.Plim(2)
@@ -72,18 +71,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
     
     Ptype_old=Ptype;
 
-    St=SwFun(t,z,prob.isFO);
-    if St+ep<0
-        utype='on';
-    elseif St-ep>0 || (St-ep>=0 && ep==0)
-        utype='off';
-    else
-        utype='med';
-    end
-
-    utype_old=utype;
-
-    
+    ep=prob.epsilon;
     
     % The main loop
     
@@ -93,20 +81,20 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
             h = tf - t; 
         end
     
-%         f = z*zeros(1,13);
+    
 %         % Compute the RHS for step of method
-%         f(:,1) = FO_2BP_SEP(t,z,Ptype_old,utype_old,ep);
-%         for j = 1:12
-%             f(:,j+1) = FO_2BP_SEP(t+C(j)*h, z+h*f*A(:,j),Ptype_old,utype_old,ep);
+%         f(:,1) = TO_2BP_SEP(t,z,Ptype_old);
+%         for j = 1: 12
+%             f(:,j+1) = TO_2BP_SEP(t+c(j)*h, z+h*f*A(:,j),Ptype_old);
 %         end
 %     
 %         % Two solution 
 %         x8=z+h*f*b8;
 %         x7=z+h*f*b7;
 
-        [x7,x8]=step(t,z,h,Ptype_old,utype_old,ep);
+        [x7,x8]=step(t,z,h,Ptype_old,ep);
 
-         % Truncation error 
+        % Truncation error 
         err = norm(x7-x8);
     
         % Estimate the error and the acceptable error
@@ -124,112 +112,65 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
             else
                 Ptype='max';
             end
-    
-            St=SwFun(t,x8,prob.isFO);
-            if St+ep<0
-                utype='on';
-            elseif St-ep>0 || (St-ep>=0 && ep==0)
-                utype='off';
-            else
-                utype='med';
-            end
 
-            if ~strcmp(Ptype,Ptype_old) || ~strcmp(utype,utype_old)
+            Se=SwFun(t+h,x8,prob.isFO);
 
-                if ~strcmp(Ptype,Ptype_old) && ~strcmp(utype,utype_old)...
-                        || (strcmp(utype,'on') && strcmp(utype_old,'off') && ep~=0)...
-                        || (strcmp(utype,'off') && strcmp(utype_old,'on') && ep~=0)  % double switch
-    
-                    h=h*0.75;
-    
-                else    % single switch
+            if Se==0
 
-%                     n=20;
-%                     i=1;
-                    ex_flag=0;
-                    tg=t+h/2;
-    
-                    while ex_flag<=0
+                h=h*0.75;
 
-                        if ~strcmp(Ptype,Ptype_old) % power switch
-            
-                            tc=fsolve(@(T) power_switching(T,t,z,Ptype_old,utype_old,ep,prob),tg,fopt);
-            
-                        elseif ~strcmp(utype,utype_old) % throttle switch
-            
-                            tc=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,ep,prob),tg,fopt);
-            
-                        end
-
-                        if tc<=t || tc>=t+h
-                            ex_flag=0;
-                            tg=t+h*rand(1,1);
-                        else
-                            ex_flag=1;
-                        end
-
-                    end
-    
-%                     if tc>t
-%                         odopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
-%                         [~,zz]=ode78(@(t,y) FO_2BP_SEP(t,y,Ptype_old,utype_old,ep),[t,tc],z,odopt);
-%             
-%                         zc=zz(end,:).';
-%                     else
-%                         zc=z;
-%                     end
-
-                    [~,zc]=step(t,z,tc-t,Ptype_old,utype_old,ep);
-        
-                    rc=zc(1:3);
-                    vc=zc(4:6);
-                    mc=zc(7);
-                    lrc=zc(8:10);
-                    lvc=zc(11:13);
-        
-                    dzc_m=FO_2BP_SEP(tc,zc,Ptype_old,utype_old,ep);
-                    dzc_p=FO_2BP_SEP(tc,zc,Ptype,utype,ep);
-    
-                    if ~strcmp(Ptype,Ptype_old) % power switch
-        
-                        Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.',zeros(1,11)]./dot(rc,vc);
-        
-                    elseif ~strcmp(utype,utype_old) && ep==0 % throttle switch
-    
-                        [Tc,Tcp]=MARGO_param(norm(rc));
-                        c=Tc(2);
-                        cp=Tcp(2);
-    
-                        DyS=[-norm(lvc)*cp/mc*rc.'/norm(rc), zeros(1,3), norm(lvc)*c/mc^2, zeros(1,3), -c/mc*lvc.'/norm(lvc), -1];
-                        DtS=norm(lvc)*c/mc*dot(lrc,lvc)-norm(lvc)/mc*cp*dot(rc,vc)/norm(rc);
-        
-                        Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*DyS/DtS;
-    
-                    else
-    
-                        Psi=eye(14);
-        
-                    end
-        
-                    h=tc-t;
-                    t=tc;
-                    z=zc;
-        
-                    Phi_m=reshape(z(15:210),[14,14]);
-                    Phi_p=Psi*Phi_m;
-                    z(15:210)=reshape(Phi_p,[14*14,1]);
-        
-                    tout = [tout; t];
-                    xout = [xout; z.'];
-        
-                    Ptype_old=Ptype;
-                    utype_old=utype;
-                end
-    
                 crossing=1;
 
-            else
+            elseif ~strcmp(Ptype,Ptype_old)
+
+                ex_flag=0;
+                tg=t+h/2;
+
+                while ex_flag<=0
+
+                    tc=fsolve(@(T) power_switching(T,t,z,Ptype_old,prob),tg,fopt);
+
+                    if tc<=t || tc>=t+h
+                        ex_flag=0;
+                        tg=t+h*rand(1,1);
+                    else
+                        ex_flag=1;
+                    end
+
+                end
     
+%                 odopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
+%                 [~,zz]=ode78(@(t,y) TO_2BP_SEP(t,y,Ptype_old),[t,tc],z,odopt);
+%     
+%                 zc=zz(end,:).';
+
+                [~,zc]=step(t,z,tc-t,Ptype_old,ep);
+    
+                rc=zc(1:3);
+                vc=zc(4:6);
+    
+                dzc_m=FO_2BP_SEP(tc,zc,Ptype_old,ep);
+                dzc_p=FO_2BP_SEP(tc,zc,Ptype,ep);
+    
+                Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.',zeros(1,11)]./dot(rc,vc);
+    
+                h=tc-t;
+                t=tc;
+                z=zc;
+    
+                Phi_m=reshape(z(15:210),[14,14]);
+                Phi_p=Psi*Phi_m;
+                z(15:210)=reshape(Phi_p,[14*14,1]);
+    
+                tout = [tout; t];
+                xout = [xout; z.'];
+    
+                Ptype_old=Ptype;
+    
+                crossing=1;       
+    
+            else
+        
                 t = t + h;
                 z = x8; 
                 tout = [tout; t];
@@ -248,6 +189,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
         end
     
+        
     
         % Step control
         if step_err == 0.0
@@ -278,7 +220,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
 end
 
-function [x7,x8]=step(t,z,h,Ptype,utype,ep)
+function [x7,x8]=step(t,z,h,Ptype,ep)
 
     C=  [ 1/18, 1/12, 1/8, 5/16, 3/8, 59/400, 93/200, 5490023248/9719169821, 13/20, 1201146811/1299019798, 1, 1]';
     
@@ -302,9 +244,9 @@ function [x7,x8]=step(t,z,h,Ptype,utype,ep)
 
     f = z*zeros(1,13);
     % Compute the RHS for step of method
-    f(:,1) = FO_2BP_SEP(t,z,Ptype,utype,ep);
+    f(:,1) = FO_2BP_SEP(t,z,Ptype,ep);
     for j = 1:12
-        f(:,j+1) = FO_2BP_SEP(t+C(j)*h, z+h*f*A(:,j),Ptype,utype,ep);
+        f(:,j+1) = FO_2BP_SEP(t+C(j)*h, z+h*f*A(:,j),Ptype,ep);
     end
 
     % Two solution 
@@ -314,12 +256,12 @@ function [x7,x8]=step(t,z,h,Ptype,utype,ep)
 end
 
 
-function [f,df]=power_switching(tc,tk,zk,Ptype,utype,ep,prob)
+function [f,df]=power_switching(tc,tk,zk,Ptype,prob)
 
 %     if tk~=tc
 %         opt=odeset('RelTol',1e-12,'AbsTol',1e-12);
 %     
-%         [~,zz]=ode78(@(t,y) FO_2BP_SEP(t,y,Ptype,utype,ep),[tk tc],zk,opt);
+%         [~,zz]=ode78(@(t,y) TO_2BP_SEP(t,y,Ptype),[tk tc],zk,opt);
 %         zc=zz(end,:).';
 %     else
 %         zc=zk;
@@ -327,7 +269,7 @@ function [f,df]=power_switching(tc,tk,zk,Ptype,utype,ep,prob)
 
     h=tc-tk;
     
-    [~,zc]=step(tk,zk,h,Ptype,utype,ep);
+    [~,zc]=step(tk,zk,h,Ptype,prob.epsilon);
 
     rc=zc(1:3);
     vc=zc(4:6);
@@ -337,49 +279,6 @@ function [f,df]=power_switching(tc,tk,zk,Ptype,utype,ep,prob)
     df=dPdr*dot(rc,vc)/norm(rc);
 
     f=Sp-prob.Plim(2);
-
-end
-
-function [f,df]=throttle_switching(tc,tk,zk,Ptype,utype,utype_n,ep,prob)
-
-%     if tk~=tc
-%         opt=odeset('RelTol',1e-12,'AbsTol',1e-12);
-%     
-%         [~,zz]=ode78(@(t,y) FO_2BP_SEP(t,y,Ptype,utype,ep),[tk tc],zk,opt);
-%         zc=zz(end,:).';
-%     else
-%         zc=zk;
-%     end
-    
-    h=tc-tk;
-    
-    [~,zc]=step(tk,zk,h,Ptype,utype,ep);
-
-    St=SwFun(tc,zc,prob.isFO);
-
-    rc=zc(1:3);
-    vc=zc(4:6);
-    mc=zc(7);
-    lrc=zc(8:10);
-    lvc=zc(11:13);
-
-    [Tc,Tcp]=MARGO_param(norm(rc));
-    c=Tc(2);
-    cp=Tcp(2);
-    
-    DtS=norm(lvc)*c/mc*dot(lrc,lvc)-norm(lvc)/mc*cp*dot(rc,vc)/norm(rc);
-
-    if ep>0
-        if (strcmp(utype,'med') && strcmp(utype_n,'on')) || (strcmp(utype,'on') && strcmp(utype_n,'med'))
-            f=St+ep;
-        else
-            f=St-ep;
-        end
-    else
-        f=St;
-    end
-
-    df=DtS;
 
 end
 

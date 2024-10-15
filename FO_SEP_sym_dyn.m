@@ -28,6 +28,9 @@ function FO_SEP_sym_dyn(prob)
     bp=MP(2,:);
     cp=MP(3,:);
 
+    syms u
+    assume('real' & u<1 & u>0)
+
     syms epsilon
     assume(epsilon,'real');
     
@@ -54,10 +57,11 @@ function FO_SEP_sym_dyn(prob)
 %     g=-rr/norm(rr)^3;
 %     h=zeros(3,1);
 
-    %-thrust-on------------------------------------------------------------
-    u=1;
-    
-    FF_med_uon=[vv;
+    %-HTS-thrust-----------------------------------------------------------
+    S=-norm(llv)*c/m-lm+1;
+    u=1/2*(1-tanh(S/epsilon));
+        
+    FF_med=[vv;
         -rr/norm(rr)^3-u*T/m*llv/norm(llv);
         -u*T/(c);
         -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
@@ -70,46 +74,7 @@ function FO_SEP_sym_dyn(prob)
 %     
 %     FF_med_uon=[ffx; ffl];
 
-    A_med_uon=jacobian(FF_med_uon,y);
-
-    %-thrust-off-----------------------------------------------------------
-    u=0;
-
-    FF_med_uoff=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
-        -llr;
-        -u*norm(llv)*T/m^2];
-    
-%     Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-%     
-%     ffl=-jacobian(Hamil,[rr; vv; m]).';
-%     
-%     FF_med_uon=[ffx; ffl];
-
-    A_med_uoff=jacobian(FF_med_uoff,y);
-
-    %-thrust-med-----------------------------------------------------------
-    Se=-norm(llv)*c/m-lm+1;
-    u=(epsilon-Se)/(2*epsilon);
-    
-    FF_med_umed=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
-        -llr;
-        -u*norm(llv)*T/m^2];
-    
-%     Hamil=dot([llr; llv; lm],ffx)+T/c*(u-epsilon*u*(1-u));
-%     
-%     ffl=-jacobian(Hamil,[rr; vv; m]).';
-%     
-%     FF_med_uon=[ffx; ffl];
-
-    A_med_umed=jacobian(FF_med_umed,y);
-
-
+    A_med=jacobian(FF_med,y);
 
     %-MAX-Dyn-computed-inside-F-and-DyF------------------------------------
 
@@ -135,44 +100,20 @@ function FO_SEP_sym_dyn(prob)
 %     g=-rr/norm(rr)^3;
 %     h=zeros(3,1);
 
-    %-thrust-on------------------------------------------------------------
-    u=1;
+    %-HTS-thrust-----------------------------------------------------------
+    S=-norm(llv)*c/m-lm+1;
+    u=1/2*(1-tanh(S/epsilon));
     
-    FF_max_uon=[vv;
+    FF_max=[vv;
         -rr/norm(rr)^3-u*T/m*llv/norm(llv);
         -u*T/(c);
         -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
         -llr;
         -u*norm(llv)*T/m^2];
     
-    A_max_uon=jacobian(FF_max_uon,y);
+    A_max=jacobian(FF_max,y);
 
-    %-thrust-off-----------------------------------------------------------
-    u=0;
-
-    FF_max_uoff=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
-        -llr;
-        -u*norm(llv)*T/m^2];
-
-    A_max_uoff=jacobian(FF_max_uoff,y);
-
-    %-thrust-med-----------------------------------------------------------
-    Se=-norm(llv)*c/m-lm+1;
-    u=(epsilon-Se)/(2*epsilon);
     
-    FF_max_umed=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
-        -llr;
-        -u*norm(llv)*T/m^2];
-
-    A_max_umed=jacobian(FF_max_umed,y);
-    
-
     dir_name='FO_dyn';
 
     if ~exist(dir_name,'dir')
@@ -180,11 +121,12 @@ function FO_SEP_sym_dyn(prob)
         addpath(dir_name)
     end
 
-    matlabFunction(FF_med_uon, A_med_uon, 'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_med_uon_dz' ));
-    matlabFunction(FF_max_uon, A_max_uon, 'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_max_uon_dz' ));
-    matlabFunction(FF_med_uoff,A_med_uoff,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_med_uoff_dz'));
-    matlabFunction(FF_max_uoff,A_max_uoff,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_max_uoff_dz'));
-    matlabFunction(FF_med_umed,A_med_umed,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_med_umed_dz'));
-    matlabFunction(FF_max_umed,A_max_umed,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_max_umed_dz'));
+%     FF_meds=subs(FF_med,u,uS);
+%     FF_maxs=subs(FF_max,u,uS);
+%     A_meds =subs(A_med ,u,uS);
+%     A_maxs =subs(A_max ,u,uS);
 
+    matlabFunction(FF_med,A_med,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_med_dz'));
+    matlabFunction(FF_max,A_max,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_max_dz'));
+   
 end

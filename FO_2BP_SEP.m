@@ -1,4 +1,4 @@
-function [dydPhi] = FO_2BP_SEP(~, z, Ptype, utype, epsilon)
+function [dydPhi] = FO_2BP_SEP(~, z, Ptype, epsilon)
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -18,7 +18,7 @@ function [dydPhi] = FO_2BP_SEP(~, z, Ptype, utype, epsilon)
     y=z(1:14);
     Phi=reshape(z(15:210),[14,14]);
 
-    [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,utype,epsilon);
+    [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,epsilon);
         
     dydPhi=zeros(210,1);
 
@@ -27,45 +27,15 @@ function [dydPhi] = FO_2BP_SEP(~, z, Ptype, utype, epsilon)
 
 end
 
-function [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,utype,epsilon)
+function [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,epsilon)
 
     if strcmp(Ptype,'med')
 
-        if strcmp(utype,'on')
-
-            [dy,A]=FO_med_uon_dz(y,MP,U,g0,epsilon);
-%             [dy2,A2]=FO_med_uon_dz_2(y,MP,U,g0,epsilon);
-
-        elseif strcmp(utype,'med')
-
-            [dy,A]=FO_med_umed_dz(y,MP,U,g0,epsilon);
-%             [dy2,A2]=FO_med_umed_dz_2(y,MP,U,g0,epsilon);
-
-        elseif strcmp(utype,'off')
-
-            [dy,A]=FO_med_uoff_dz(y,MP,U,g0,epsilon);
-%             [dy2,A2]=FO_med_uoff_dz_2(y,MP,U,g0,epsilon);
-
-        end
+        [dy,A]=FO_med_dz(y,MP,U,g0,epsilon);
 
     elseif strcmp(Ptype,'max')
 
-        if strcmp(utype,'on')
-
-            [dy,A]=FO_max_uon_dz(y,MP,U,g0,epsilon);
-%             [dy2,A2]=FO_max_uon_dz_2(y,MP,U,g0,epsilon);
-
-        elseif strcmp(utype,'med')
-
-            [dy,A]=FO_max_umed_dz(y,MP,U,g0,epsilon);
-%             [dy2,A2]=FO_max_umed_dz_2(y,MP,U,g0,epsilon);
-
-        elseif strcmp(utype,'off')
-
-            [dy,A]=FO_max_uoff_dz(y,MP,U,g0,epsilon);
-%             [dy2,A2]=FO_max_uoff_dz_2(y,MP,U,g0,epsilon);
-
-        end
+        [dy,A]=FO_max_dz(y,MP,U,g0,epsilon);
 
     end
 
