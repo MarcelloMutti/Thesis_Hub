@@ -8,7 +8,7 @@ function prob = E2F_CONT(prob)
     it=1;
 
     E_min=1e-6;
-    DE=0.05;
+    DE_max=0.05;
 %     E=prob.epsilon;
 
     iscomplete=0;
@@ -25,7 +25,7 @@ function prob = E2F_CONT(prob)
 
             while ex_flag<=0
 
-                prob(it+1).epsilon=max(E-DE/(2^(f-1)),E_min);
+                prob(it+1).epsilon=max(E-DE_max/(2^(f-1)),E_min);
 
                 if rem(f,2)==1 % attempt 0NPCM (alternates with act)
 
@@ -52,7 +52,7 @@ function prob = E2F_CONT(prob)
 
              
 %             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
-
+% 
 %         elseif it==2    %-0NPCM--------------------------------------------
 %             
 %             tic
@@ -179,7 +179,7 @@ function prob = E2F_CONT(prob)
 
         prob(it+1)=DispRes(prob(it+1),0);
 
-        DE=1.25*(prob(it).epsilon-prob(it+1).epsilon);
+        DE=min(1.25*(prob(it).epsilon-prob(it+1).epsilon),DE_max);
 
 %         prob(it+1)=prob(it);
 

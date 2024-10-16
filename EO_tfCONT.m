@@ -9,6 +9,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
     L=length(prob);
 
     Dt_max=30; % [days]
+    Dt_min=1;  % [days]
 
     iscomplete=0;
     skip=0;
@@ -193,7 +194,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
         if it==1
             DT=min(1.25*(prob(L+it).tf_ad-TO_ref(id).tf_ad),Dt_max*86400/TU);
         else
-            DT=max(min(1.25*(prob(L+it-1).tf_ad-prob(L+it).tf_ad),Dt_max*86400/TU),1*86400/TU);
+            DT=max(min(1.25*(prob(L+it-1).tf_ad-prob(L+it).tf_ad),Dt_max*86400/TU),Dt_min*86400/TU);
         end
 
         if prob(L+it).tf_ad==TO_ref(id).tf_ad
