@@ -12,7 +12,7 @@ function [prob] = TO_t0CONT(prob)
 
     prob(it).t0=t_wo;
 
-    Dt_max=30; % [days]
+    Dt_max=5; % [days]
     Dt_iter=86400;
     N=25;
 
@@ -29,7 +29,7 @@ function [prob] = TO_t0CONT(prob)
                 atmp=1; % number of rundown attempts
                 tf_gv=2*pi*linspace(1,2,N); % rundown guesses
 
-                wb1=waitbar(0,'Generating first solution');
+                wb1=waitbar(0,'Generating first TO solution');
     
                 while ex_flag<=0
     
@@ -40,7 +40,7 @@ function [prob] = TO_t0CONT(prob)
 
                     
 
-                    wb1=waitbar(f/(atmp*N),wb1,'Generating first solution');
+                    wb1=waitbar(f/(atmp*N),wb1,'Generating first TO solution');
 
                     f=f+1;
 
@@ -71,7 +71,7 @@ function [prob] = TO_t0CONT(prob)
             close all
             clc
 
-            wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
+            wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating TO t0 continuation');
 
         elseif it==2    %-0NPCM--------------------------------------------
             
@@ -173,7 +173,7 @@ function [prob] = TO_t0CONT(prob)
                 end
             end
 
-            wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb2,'TO continuation');
+            wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb2,sprintf('TO t0 continuation [%.2f %%]',(prob(it).t0-t_wo)/(t_wc-t_wo)*100));
 
             it=it+1;
             
@@ -189,32 +189,30 @@ function [prob] = TO_t0CONT(prob)
 
     close(wb2);
 
-    figure
-    plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
-    grid on
-    grid minor
-    axis tight
-    ylim([100 1100])
-    title('tf')
-
-    s=length(prob);
-    id=[1:10:s, s];
-
-    figure
-    for i=id
-        plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
-        view([55, 55])
-        hold on
-        plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
-        plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
-        plot3(0,0,0,'+k')
-    end
-    grid on
-    grid minor
-    xlabel('$x [AU]$')
-    ylabel('$y [AU]$')
-    zlabel('$z [AU]$')
-
-    toc
+%     figure
+%     plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
+%     grid on
+%     grid minor
+%     axis tight
+%     ylim([100 1100])
+%     title('tf')
+% 
+%     s=length(prob);
+%     id=[1:10:s, s];
+% 
+%     figure
+%     for i=id
+%         plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
+%         view([55, 55])
+%         hold on
+%         plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
+%         plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
+%         plot3(0,0,0,'+k')
+%     end
+%     grid on
+%     grid minor
+%     xlabel('$x [AU]$')
+%     ylabel('$y [AU]$')
+%     zlabel('$z [AU]$')
 
 end

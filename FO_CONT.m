@@ -10,7 +10,10 @@ function [prob]=FO_CONT(prob,TO_ref)
 
         prob=EO_tfCONT(prob,TO_ref,id);
         prob(end).isTO=1;
+        prob(end)=E2F_CONT(prob(end),id,L);
 
     end
 
 end
+
+% t0 tf and e2f all only used in fo_cnt

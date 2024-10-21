@@ -238,6 +238,7 @@ c=colorbar;
 hold on
 contour(X,Y,Z,[2.8 2.8],'k--','LineWidth',2)
 plot(et2MJD2000([TO_ref.t0]),TU/86400*([TO_ref.tf_ad]),'r','LineWidth',2)
+plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
 xlabel('$$t_0\, [MJD2000]$$','Interpreter','latex')
 ylabel('$$ToF\, [days]$$','Interpreter','latex')
 c.Label.String='mp';
@@ -254,6 +255,11 @@ y0TOEO=[prob_TOEO.y0];
 l0TOEO=y0TOEO(8:14,:);
 
 prob_TOTO=TO_ref(1:(length(prob_TO)+length(prob_SK)));
+
+MS=[];
+for i=1:length(prob_TOTO)
+    MS(i)=max(prob_TOTO(i).S);
+end
 
 y0TOTO=[prob_TOTO.y0];
 l0TOTO=y0TOTO(8:14,:);
@@ -277,9 +283,63 @@ grid minor
 xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
 ylabel('$$\lambda^{EO}_{m,0}$$','Interpreter','latex')
 
-subplot(2,2,[2,4])
+subplot(2,2,2)
 plot(et2MJD2000([prob_TOEO.t0]),mean(gamma)./llm0)
 grid on
 grid minor
 xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
 ylabel('$$\frac{\gamma}{\lambda^{EO}_{m,0}}$$','Interpreter','latex')
+
+subplot(2,2,4)
+plot(et2MJD2000([prob_TOEO.t0]),-1./MS)
+grid on
+grid minor
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$-1/\max(S)$$','Interpreter','latex')
+
+figure
+subplot(3,1,1)
+semilogy(et2MJD2000([prob_TOEO.t0]),mean(gamma),'-ob')
+hold on
+semilogy(et2MJD2000([prob_TOEO.t0]),-1./MS,'--xr')
+semilogy(et2MJD2000([prob_TOEO.t0]),-1./MS*mean(mean(gamma)./(-1./MS)),'--k')
+grid on
+grid minor
+xlim(et2MJD2000([min([prob_TOEO.t0]) max([prob_TOEO.t0])]))
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\gamma,\,-1/\max(S)$$','Interpreter','latex')
+
+subplot(3,1,2)
+semilogy(et2MJD2000([prob_TOEO.t0]),mean(gamma)./(-1./MS),'-ob')
+grid on
+grid minor
+xlim(et2MJD2000([min([prob_TOEO.t0]) max([prob_TOEO.t0])]))
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\frac{\gamma}{-1/\max(S)}$$','Interpreter','latex')
+
+subplot(3,1,3)
+semilogy(et2MJD2000([prob_TOEO.t0]),mean(gamma)+1./MS,'-ob')
+grid on
+grid minor
+xlim(et2MJD2000([min([prob_TOEO.t0]) max([prob_TOEO.t0])]))
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\gamma-(-1/\max(S))$$','Interpreter','latex')
+
+figure
+semilogy(et2MJD2000([prob_TOEO.t0]),mean(gamma),'-ob')
+hold on
+semilogy(et2MJD2000([prob_TOEO.t0]),-1./MS,'--xr')
+grid on
+grid minor
+xlim(et2MJD2000([min([prob_TOEO.t0]) max([prob_TOEO.t0])]))
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\gamma,\,-1/\max(S)$$','Interpreter','latex')
+legend('$$\gamma$$','$$\frac{-1}{\max(S)}$$','interpreter','latex');
+
+figure
+semilogy(et2MJD2000([prob_TOEO.t0]),-MS.*mean(gamma),'-ob')
+grid on
+grid minor
+xlim(et2MJD2000([min([prob_TOEO.t0]) max([prob_TOEO.t0])]))
+xlabel('$$t_0 \, [MDJ2000]$$','Interpreter','latex')
+ylabel('$$\frac{\gamma}{-1/\max(S)}$$','Interpreter','latex')

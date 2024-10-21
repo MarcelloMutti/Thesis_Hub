@@ -16,7 +16,7 @@ str_wo='2022-12-31 12:00 UTC';clc
 
 str_wc='2024-12-31 12:00 UTC';
 
-targ='20478784';
+targ='3702319';
 m0=22.6;  % [kg]
 Pmax=120; % [W]
 Pmin=20;  % [W]
@@ -84,7 +84,7 @@ TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 % [~,~,FO_prob]=FO_ZFP(ll_FO,FO_prob);
 % FO_prob=DispRes(FO_prob);
 
-load('2012UV136bis.mat');
+load('2014TOs.mat');
 
 EO_prob=FO_CONT(FO_prob,TO_prob);
 

@@ -8,11 +8,13 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
     it=1;
     L=length(prob);
 
-    Dt_max=30; % [days]
+    Dt_max=20; % [days]
     Dt_min=1;  % [days]
 
     iscomplete=0;
     skip=0;
+
+    wb1=waitbar(0,sprintf('EO tf continuation [%.2f %%] of %.0f/%.0f',0,id,length(TO_ref)));
 
     while ~iscomplete
 
@@ -212,6 +214,8 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
         end
 
+        
+        wb1=waitbar((prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad),wb1,sprintf('EO tf continuation [%.2f %%] of %.0f/%.0f',(prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad)*100,id,length(TO_ref)));
 
         it=it+1;
             
@@ -235,9 +239,10 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
         
     end
 
-%     fprintf('\n')
-% 
-%     close(wb2);
+    fprintf('\n')
+
+    close(wb1);
+
 % 
 %     figure
 %     plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)

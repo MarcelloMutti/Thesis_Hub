@@ -1,14 +1,14 @@
 function [prob] = EO_t0CONT(prob,TO_ref)
 
-    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
+    fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-9,'FunctionTolerance',1e-9,'MaxIterations',2e2);
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
 %     it=1;
 % 
-%     t_wo=prob(1).tw(1);
-%     t_wc=prob(1).tw(2);
+    t_wo=prob(1).tw(1);
+    t_wc=prob(1).tw(2);
 % 
 %     prob(it).t0=t_wo;
 % 
@@ -32,6 +32,8 @@ function [prob] = EO_t0CONT(prob,TO_ref)
             ex_flag=0;
             f=1;
 
+            wb1=waitbar(0,'Generating first EO solution');
+
             while ex_flag<=0
 
                 llg=ACT(prob(it));
@@ -48,7 +50,7 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
             end
 
-%             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
+            wb1=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb1,'Initiating EO t0 continuation');
 
         elseif it==2    %-0NPCM--------------------------------------------
             
@@ -136,14 +138,16 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
         prob(it)=DispRes(prob(it),0);
 
+        wb1=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb1,sprintf('EO t0 continuation [%.2f %%]',(prob(it).t0-t_wo)/(t_wc-t_wo)*100));
+
 %         if it==2
-%             prob(1)=E2F_CONT(prob(1));
-%             prob(2)=E2F_CONT(prob(2));
+%             prob(1)=E2F_CONT(prob(1),1,1);
+%             prob(2)=E2F_CONT(prob(2),1,1);
 %         end
-
-
-
-
+% 
+% 
+% 
+% 
 %         if it==1   % EO -> FO
 % 
 %             de=0.05;
@@ -182,7 +186,7 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 %     
 %             
 %         end
-
+% 
 %         if prob(it).t0<t_wc
 %             prob(it+1)=prob(it);
 %             
@@ -210,34 +214,32 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
     fprintf('\n')
 
-%     close(wb2);
+    close(wb1);
 
-    figure
-    plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
-    grid on
-    grid minor
-    axis tight
-    ylim([100 1100])
-    title('tf')
-
-    s=length(prob);
-    id=[1:10:s, s];
-
-    figure
-    for i=id
-        plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
-        view([55, 55])
-        hold on
-        plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
-        plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
-        plot3(0,0,0,'+k')
-    end
-    grid on
-    grid minor
-    xlabel('$x [AU]$')
-    ylabel('$y [AU]$')
-    zlabel('$z [AU]$')
-
-    toc
+%     figure
+%     plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
+%     grid on
+%     grid minor
+%     axis tight
+%     ylim([100 1100])
+%     title('tf')
+% 
+%     s=length(prob);
+%     id=[1:10:s, s];
+% 
+%     figure
+%     for i=id
+%         plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
+%         view([55, 55])
+%         hold on
+%         plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
+%         plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
+%         plot3(0,0,0,'+k')
+%     end
+%     grid on
+%     grid minor
+%     xlabel('$x [AU]$')
+%     ylabel('$y [AU]$')
+%     zlabel('$z [AU]$')
 
 end
