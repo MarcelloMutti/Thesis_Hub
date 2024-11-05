@@ -7,8 +7,9 @@ function prob = E2F_CONT(prob,id,L)
 
     it=1;
 
-    E_min=1e-5;
-    DE=0.05;
+    E_min=0;
+    DE_max=0.05;
+    DE=DE_max;
 %     E=prob.epsilon;
 
     iscomplete=0;
@@ -185,8 +186,8 @@ function prob = E2F_CONT(prob,id,L)
 
         prob(it+1)=DispRes(prob(it+1),0);
 
-        E=prob(it+1).epsilon;
-        DE=max(min(1.25*(prob(it).epsilon-prob(it+1).epsilon),E/2),E_min);
+%         E=prob(it+1).epsilon;
+        DE=max(min(1.25*(prob(it).epsilon-prob(it+1).epsilon),DE_max),E_min);
 
         % minimum step set to E_min, to check it ensures convergence
 

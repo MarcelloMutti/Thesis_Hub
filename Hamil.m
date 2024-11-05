@@ -1,7 +1,6 @@
 function [H] = Hamil(tt,zz,prob)
 % adimesional inputs
 
-%     u=1;
     H=zeros(length(tt),1);
 
     for i=1:length(H)
@@ -15,18 +14,43 @@ function [H] = Hamil(tt,zz,prob)
             Ptype='max';
         end
 
-        Sw=SwFun(tt(i),zz(i,:),prob.isFO);
+        ep=prob.epsilon;
+        Se=SwFun(tt(i),zz(i,:),prob.isFO);
+
+        if ep~=0
+            if Se<-ep
+                utype='on';
+            elseif Se>ep
+                utype='off';
+            else
+                utype='med';
+            end
+        else
+            if Se<0
+                utype='on';
+            else
+                utype='off';
+            end
+        end
 
         if prob.isFO==1
 
-            ff=FO_2BP_SEP(tt(i),zz(i,:).',Ptype,prob.epsilon);
-            u=1/2*(1-tanh(Sw/prob.epsilon));
+            ff=FO_2BP_SEP(tt(i),zz(i,:).',Ptype,utype,ep);
 
         else
 
             ff=TO_2BP_SEP(tt(i),zz(i,:).',Ptype);
-            u=1;
 
+        end
+
+        if ep>0
+
+            u=1.*(Se<-ep)+(ep-Se)./(2*ep).*(abs(Se)<=ep)+0;
+    
+        else
+    
+            u=1.*(Se<0)+0;
+    
         end
 
         Tc=MARGO_param(r);
@@ -35,7 +59,7 @@ function [H] = Hamil(tt,zz,prob)
 
         ffx=ff(1:7);
         ll=zz(i,8:14).';
-        H(i)=dot(ll,ffx)+prob.isFO*(T/c*(u-u*prob.epsilon*(1-u)));
+        H(i)=dot(ll,ffx)+prob.isFO*(T/c*(u-u*ep*(1-u)));
     end
     
 end

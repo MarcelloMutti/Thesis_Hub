@@ -42,12 +42,10 @@ function [prob] = DispRes(prob,output)
 
     if prob.isFO==1
 
-%         [tt,zz]=FO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
         [tt,zz]=FO_ode87(prob,[0 tf_ad],[y0; vPhi0]);
 
     else
-    
-%         [tt,zz]=TO_ode78(prob,[0 tf_ad],[y0; vPhi0]);
+
         [tt,zz]=TO_ode87(prob,[0 tf_ad],[y0; vPhi0]);
 
     end
@@ -69,25 +67,42 @@ function [prob] = DispRes(prob,output)
     [TTcc,~,P]=MARGO_param(r);
 
     TT=(MU*LU)/(TU^2)*TTcc(1,:)*1e6; % [mN]
-    II=LU/TU*TTcc(2,:)/g0;
+    II=LU/TU*TTcc(2,:)/g0;           % [s]
 
-    S=SwFun(tt,zz,prob.isFO);
+    ep=prob.epsilon;
+    Se=SwFun(tt,zz,prob.isFO);
 
-    if prob.epsilon>0
+    if ep>0
 
-        u=1/2*(1-tanh(S./prob.epsilon));
+        u=1.*(Se<-ep)+(ep-Se)./(2*ep).*(abs(Se)<=ep)+0;
 
     else
 
-        u=1.*(S<0)+0;
+        u=1.*(Se<0)+0;
 
+    end
+
+    % only for ep=0
+    u_d=[];
+    ttd_d=[];
+
+    if ep==0
+        for i=1:length(Se)-1
+            if Se(i)*Se(i+1)<0
+                u_d=[u_d u(i) u(i+1)];
+                ttd_d=[ttd_d ttd(i) ttd(i+1)];
+            else
+                u_d=[u_d u(i)];
+                ttd_d=[ttd_d ttd(i)];
+            end
+        end
     end
 
     H=Hamil(tt,zz,prob);
 
     prob.mf=mf;
     prob.mp=mp;
-    prob.S=S;
+    prob.S=Se;
     prob.H=H;
     prob.tt_ad=tt;
     prob.tt=ttd;
@@ -119,7 +134,7 @@ function [prob] = DispRes(prob,output)
 
         %-switching-function-----------------------------------------------
         subplot(4,2,5)
-        plot(ttd,S)
+        plot(ttd,Se)
         axis tight
         ylabel('$S$')
         grid on
@@ -193,7 +208,7 @@ function [prob] = DispRes(prob,output)
 
         %-switching-function-----------------------------------------------
         subplot(3,2,3)
-        plot(ttd,S)
+        plot(ttd,Se)
         axis tight
         ylabel('$S$')
         grid on
@@ -238,21 +253,7 @@ function [prob] = DispRes(prob,output)
         ylabel('$T_{max}\,[mN]$')
         grid on
         grid minor
-
-%         %-hamiltonian------------------------------------------------------
-%         subplot(4,2,1)
-%         plot(ttd,H)
-%         axis tight
-%         ylabel('H')
-%         grid on
-%         grid minor
-%         
-%         subplot(4,2,2)
-%         plot(ttd,H)
-%         axis tight
-%         ylabel('H')
-%         grid on
-%         grid minor
+        
     end
 
 
