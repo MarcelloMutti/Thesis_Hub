@@ -16,13 +16,14 @@ function prob = struct_assembly(targ,twin,m0,Plim,isFO)
     if isFO==0
         prob.epsilon=0;
     else
-        prob.epsilon=[];    % EFO continuation parameter
+        prob.epsilon=1;    % EFO continuation parameter
+        prob.isTO=0;
     end
     
     %-added-by-TO_t0CONT---------------------------------------------------
     prob.t0=[];             % [1x1, s]
     
-    %-added-by-TO_ZFP------------------------------------------------------
+    %-added-by-ZFP---------------------------------------------------------
     prob.gamma=[];          % [8x1, -]
     prob.jac=[];            % [8x8, -]
     prob.tf=[];             % [1x1, s]

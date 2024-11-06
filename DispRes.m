@@ -83,19 +83,40 @@ function [prob] = DispRes(prob,output)
     end
 
     % only for ep=0
-    u_d=[];
-    ttd_d=[];
-
     if ep==0
-        for i=1:length(Se)-1
-            if Se(i)*Se(i+1)<0
-                u_d=[u_d u(i) u(i+1)];
-                ttd_d=[ttd_d ttd(i) ttd(i+1)];
+        s=1;
+        u0=u(s);
+        
+        ttd_d=[];   % used for bang-bang display
+        u_d=[];     % used for bang-bang display
+        zz_d=[];
+
+        idu=0;
+        
+        while ~isempty(idu)
+            idu=find(u(s:end)~=u0,1,'first')+s-1;
+        
+            if ~isempty(idu)
+            
+                u_d=[u_d; u(s:idu-1); u(idu-u0)];
+                ttd_d=[ttd_d; ttd(s:idu-1); ttd(idu-1+u0)];
+                zz_d=[zz_d; zz(s:idu-1,:); zz(idu-1+u0,:)];
+                
+                u0=u(idu);
+                s=idu;
+        
             else
-                u_d=[u_d u(i)];
-                ttd_d=[ttd_d ttd(i)];
+        
+                u_d=[u_d; u(s:end)];
+                ttd_d=[ttd_d; ttd(s:end)];
+                zz_d=[zz_d; zz(s:end,:)];
+        
             end
+        
         end
+    else
+        u_d=u;
+        ttd_d=ttd;
     end
 
     H=Hamil(tt,zz,prob);
@@ -125,7 +146,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(4,2,3)
-        plot(ttd,u)
+        plot(ttd_d,u_d)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')
@@ -199,7 +220,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(3,2,1)
-        plot(ttd,u)
+        plot(ttd_d,u_d)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')

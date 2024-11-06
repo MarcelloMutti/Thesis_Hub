@@ -25,7 +25,7 @@ function [prob] = EO_t0CONT(prob,TO_ref)
         prob(it).t0=TO_ref(it).t0;
         prob(it).tf=TO_ref(it).t0+ToF_m*86400;
         prob(it).tf_ad=ToF_m*86400/TU;
-        prob(it).epsilon=1;
+%         prob(it).epsilon=1;
 
         if it==1        %-1st-solution-           
                         

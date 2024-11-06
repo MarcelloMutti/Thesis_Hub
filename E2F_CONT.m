@@ -140,21 +140,21 @@ function prob = E2F_CONT(prob,id,L)
 
                 prob(it+1).epsilon=max(E-DE/(2^(f-1)),E_min);
 
-                if rem(f,4)==1 % attempt 0NPCM
+                if rem(f,4)==(1-(1-prob(it).isTO)) % attempt 0NPCM
 
                     ll_g=prob(it).y0(8:14);
 
-                elseif rem(f,4)==2 % attempt 1NPCM
+                elseif rem(f,4)==(2-(1-prob(it).isTO)) % attempt 1NPCM
 
                     ll_g=prob(it).y0(8:14)+(prob(it+1).epsilon-prob(it).epsilon)*(prob(it).y0(8:14)-prob(it-1).y0(8:14))/(prob(it).epsilon-prob(it-1).epsilon);            
                    
-                elseif rem(f,4)==3 && it>=3 % attempt 2NPCM
+                elseif rem(f,4)==(3-(1-prob(it).isTO)) && it>=3 % attempt 2NPCM
 
                     yy=[prob(it-2:it).y0];
                     ll=yy(8:14,:);
                     ll_g=makima([prob(it-2:it).epsilon],ll,prob(it+1).epsilon);
 
-                elseif rem(f,4)==4 && it>=4 % attempt 3NPCM
+                elseif rem(f,4)==(4-(1-prob(it).isTO)) && it>=4 % attempt 3NPCM
 
                     yy=[prob(it-3:it).y0];
                     ll=yy(8:14,:);
@@ -186,8 +186,8 @@ function prob = E2F_CONT(prob,id,L)
 
         prob(it+1)=DispRes(prob(it+1),0);
 
-%         E=prob(it+1).epsilon;
-        DE=max(min(1.25*(prob(it).epsilon-prob(it+1).epsilon),DE_max),E_min);
+        E=prob(it+1).epsilon;
+        DE=max(min(E,DE_max),E_min);
 
         % minimum step set to E_min, to check it ensures convergence
 

@@ -302,7 +302,8 @@ subplot(3,1,1)
 semilogy(et2MJD2000([prob_TOEO.t0]),mean(gamma),'-ob')
 hold on
 semilogy(et2MJD2000([prob_TOEO.t0]),-1./MS,'--xr')
-semilogy(et2MJD2000([prob_TOEO.t0]),-1./MS*mean(mean(gamma)./(-1./MS)),'--k')
+semilogy(et2MJD2000([prob_TOEO.t0]),-2./MS,'--k')
+% semilogy(et2MJD2000([prob_TOEO.t0]),-1./MS*mean(mean(gamma)./(-1./MS)),'--k')
 grid on
 grid minor
 xlim(et2MJD2000([min([prob_TOEO.t0]) max([prob_TOEO.t0])]))
