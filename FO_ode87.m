@@ -166,19 +166,17 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
                     if ~strcmp(Ptype,Ptype_old)
 
-                        tc=fsolve(@(T) power_switching(T,t,z,Ptype_old,utype_old,prob),tg,fopt);
+                        [tc,cr_v,ex_flag]=fsolve(@(T) power_switching(T,t,z,Ptype_old,utype_old,prob),tg,fopt);
 
                     elseif ~strcmp(utype,utype_old)
 
-                        tc=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,prob),tg,fopt);
+                        [tc,cr_v,ex_flag]=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,prob),tg,fopt);
 
                     end
 
                     if tc<=t || tc>=t+h
                         ex_flag=0;
                         tg=t+h*rand(1,1);
-                    else
-                        ex_flag=1;
                     end
 
                 end
