@@ -1,6 +1,7 @@
 function [prob] = EO_t0CONT(prob,TO_ref)
 
     fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-9,'FunctionTolerance',1e-9,'MaxIterations',2e2);
+    fsopt2=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',false,'OptimalityTolerance',1e-9,'FunctionTolerance',1e-9,'MaxIterations',2e2);
 
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
@@ -18,7 +19,7 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
     L=length(TO_ref);
 
-    ToF_m=1095; % [d]
+    ToF_m=800; % [d]
 
     for it=1:L
 
@@ -38,7 +39,8 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
                 llg=ACT(prob(it));
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
+                [ll_FO,~,ex_flag,~,jac]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
+                % [ll_FO2,~,ex_flag2,~,jac2]=fsolve(@(ll) FO_ZFP(ll,prob(it)),ll_FO,fsopt2);
 
                 df=FO_ZFP(ll_FO,prob(it));
 

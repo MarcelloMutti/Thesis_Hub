@@ -22,7 +22,8 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 %      b7 = [ 13451932/455176623, 0, 0, 0, 0, -808719846/976000145, 1757004468/5645159321, 656045339/265891186,   -3867574721/1518517206,   465885868/322736535,  53011238/667516719,                  2/45,    0]';
     
 
-    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
+    fsopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
+    fzopt=optimset('Display','notify','FunValCheck','on');
     
     pow = 1/8; % power for step control
     
@@ -56,7 +57,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
     
     t = t0;
     z = z0(:);          % start point
-    f = z*zeros(1,13);  % array f for RHS calculation
+    % f = z*zeros(1,13);  % array f for RHS calculation
     tout = t;
     xout = z.';
     
@@ -124,13 +125,21 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
             % step sw eval @ t+h ------------------------------------------
             r=norm(x8(1:3));
-            [~,~,Sp]=MARGO_param(r);
+            [Tc,Tcp,Sp]=MARGO_param(r);
             if Sp<prob.Plim(2)
                 Ptype='med';
             else
                 Ptype='max';
             end
+            r_old=norm(z(1:3));
+            [~,~,Sp_old]=MARGO_param(r_old);
 
+            c=Tc(2);
+            cp=Tcp(2);
+
+            dtSe=c/x8(7)*dot(x8(8:10),x8(11:13))/norm(x8(11:13))-norm(x8(11:13))/x8(7)*cp/r*dot(x8(1:3),x8(4:6));
+
+            Se_old=SwFun(t,z,prob.isFO);
             Se=SwFun(t+h,x8,prob.isFO);
             if ep~=0
                 if Se<-ep
@@ -148,10 +157,12 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                 end
             end
 
-            if Se==0 ...                                                        % Sw=0
+            if isapprox(abs(Se),ep,'tight') ...                                         % Sw=+-ep
+                || (isapprox(abs(dtSe),0,'tight') && isapprox(abs(Se),ep,'tight')) ... % dubious utility
                 || (~strcmp(Ptype,Ptype_old) && ~strcmp(utype,utype_old)) ...   % Double switch
                 || (ep~=0 && strcmp(utype,'on') && strcmp(utype_old,'off')) ... % off->on in EO
-                || (ep~=0 && strcmp(utype,'off') && strcmp(utype_old,'on'))     % on->off in EO
+                || (ep~=0 && strcmp(utype,'off') && strcmp(utype_old,'on')) ... % on->off in EO
+                || ((~strcmp(Ptype,Ptype_old) || ~strcmp(utype,utype_old)) && (isapprox(abs(Se_old),ep,'tight') || isapprox(Sp_old,prob.Plim(2),'tight')))  % force 1step after switching
 
                 h=h*0.75;
 
@@ -159,24 +170,47 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
             elseif xor(~strcmp(Ptype,Ptype_old),~strcmp(utype,utype_old))
 
+                % bisection attempt (fzero)
                 ex_flag=0;
-                tg=t+h/2;
 
                 while ex_flag<=0
 
                     if ~strcmp(Ptype,Ptype_old)
 
-                        [tc,cr_v,ex_flag]=fsolve(@(T) power_switching(T,t,z,Ptype_old,utype_old,prob),tg,fopt);
+                        [tc,cr_v,ex_flag]=fzero(@(T) power_switching(T,t,z,Ptype_old,utype_old,prob),[t, t+h],fzopt);
 
                     elseif ~strcmp(utype,utype_old)
 
-                        [tc,cr_v,ex_flag]=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,prob),tg,fopt);
+                        [tc,cr_v,ex_flag]=fzero(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,prob),[t, t+h],fzopt);
 
                     end
 
                     if tc<=t || tc>=t+h
+                        
+                        % newton attempt (fsolve)
                         ex_flag=0;
-                        tg=t+h*rand(1,1);
+                        tg=t+h/2;
+        
+                        while ex_flag<=0
+        
+                            if ~strcmp(Ptype,Ptype_old)
+        
+                                [tc,cr_v,ex_flag]=fsolve(@(T) power_switching(T,t,z,Ptype_old,utype_old,prob),tg,fsopt);
+        
+                            elseif ~strcmp(utype,utype_old)
+        
+                                [tc,cr_v,ex_flag]=fsolve(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,prob),tg,fsopt);
+        
+                            end
+        
+                            if tc<=t || tc>=t+h
+                                
+                                error('you done fucked up')
+        
+                            end
+        
+                        end
+
                     end
 
                 end
@@ -198,7 +232,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
     
                     Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.'/dot(rc,vc),zeros(1,11)];
 
-                else
+                elseif (~strcmp(utype,utype_old) && ep==0)
 
                     [Tc,Tcp]=MARGO_param(norm(rc));
                     c=Tc(2);    % ex vel
@@ -208,6 +242,10 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                     DtSe=c/mc*dot(llrc,llvc)/norm(llvc)-norm(llvc)*cp/mc*dot(rc,vc)/norm(rc);
 
                     Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*DySe/DtSe;
+
+                else
+
+                    Psi=eye(14);
 
                 end
     

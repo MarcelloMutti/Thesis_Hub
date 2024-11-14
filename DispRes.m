@@ -117,6 +117,7 @@ function [prob] = DispRes(prob,output)
     else
         u_d=u;
         ttd_d=ttd;
+        zz_d=zz;
     end
 
     H=Hamil(tt,zz,prob);
@@ -131,7 +132,7 @@ function [prob] = DispRes(prob,output)
 
     if output==1
 
-        plot3D(t0,tt,zz,targ,u);
+        plot3D(t0,ttd_d,zz_d,targ,u_d);
     
         fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',0),et2MJD2000(t0))
         fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',0),et2MJD2000(tf))
@@ -292,7 +293,7 @@ function plot3D(t0,tt,zz,targ,u)
     LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
     TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
-    ttd=tt.'.*TU+t0;
+    ttd=tt.'.*86400+t0;
 
     xx_SEL2=cspice_spkezr('392',ttd,'ECLIPJ2000','NONE','Sun');
     rr_SEL2=xx_SEL2(1:3,:)./LU;
@@ -301,6 +302,11 @@ function plot3D(t0,tt,zz,targ,u)
 
 %     rr_on=zz(S<0,1:3);
 %     rr_off=zz(S>=0,1:3);
+
+    r=sqrt(sum(zz(:,1:3).^2,2));
+    Tc=MARGO_param(r);
+    T=Tc(1,:);
+    c=Tc(2,:);
 
     L=length(u);
     
@@ -313,6 +319,12 @@ function plot3D(t0,tt,zz,targ,u)
     plot3(rrt(1,:),rrt(2,:),rrt(3,:),'color',[.8 .8 .8],'LineWidth',0.1)
     for i=1:L-1
         line([zz(i,1), zz(i+1,1)],[zz(i,2), zz(i+1,2)],[zz(i,3), zz(i+1,3)],'color',[u(i) 0 1-u(i)],'linewidth',u(i)+1);
+    end
+    for i=1:L
+        if u(i)~=0
+            th=-u(i)*zz(i,11:13)/norm(zz(i,11:13))*T(i)/c(i);
+            quiver3(zz(i,1),zz(i,2),zz(i,3),th(1),th(2),th(3),'color',[u(i) 0 1-u(i)])
+        end
     end
     view([55, 55])    
     xlim([-1.5 1.5])

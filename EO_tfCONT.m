@@ -13,6 +13,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
     iscomplete=0;
     skip=0;
+    nang=0;
 
     wb1=waitbar(0,sprintf('EO tf continuation [%.2f %%] of %.0f/%.0f',0,id,length(TO_ref)));
 
@@ -30,7 +31,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                 prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(id).tf_ad-(Dt_max/(2^(f-1)))*86400/TU);
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
-                if rem(f,2)==1 % attempt 0NPCM (alternates with act)
+                if rem(f,2)==1 && ~nang % attempt 0NPCM (alternates with act)
 
                     ll_g=prob(id).y0(8:14);        
                    
@@ -40,7 +41,12 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
                 end
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);                
+                if anynan(ll_g)
+                    nang=1;
+                    ex_flag=0;
+                else
+                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
+                end
 
                 df=FO_ZFP(ll_FO,prob(L+it));
 
@@ -107,7 +113,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                 prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-DT/(2^(f-1)));
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
-                if rem(f,2)==1 % attempt 1NPCM
+                if rem(f,2)==1 && ~nang % attempt 1NPCM
 
                     ll_g=prob(L+it-1).y0(8:14)+(prob(L+it).tf_ad-prob(L+it-1).tf_ad)*(prob(L+it-1).y0(8:14)-prob(id).y0(8:14))/(prob(L+it-1).tf_ad-prob(id).tf_ad);            
                    
@@ -117,8 +123,12 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
                 end
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);
-                
+                if anynan(ll_g)
+                    nang=1;
+                    ex_flag=0;
+                else
+                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
+                end                
 
                 df=FO_ZFP(ll_FO,prob(L+it));
 
@@ -145,17 +155,17 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                 prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-DT/(2^(f-1)));
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
-                if rem(f,4)==1 % attempt 1NPCM
+                if rem(f,4)==1 && ~nang % attempt 1NPCM
 
                     ll_g=prob(L+it-1).y0(8:14)+(prob(L+it).tf_ad-prob(L+it-1).tf_ad)*(prob(L+it-1).y0(8:14)-prob(L+it-2).y0(8:14))/(prob(L+it-1).tf_ad-prob(L+it-2).tf_ad);            
                    
-                elseif rem(f,4)==2 && it>=3 % attempt 2NPCM
+                elseif rem(f,4)==2 && it>=3 && ~nang % attempt 2NPCM
 
                     yy=[prob(L+it-3:L+it-1).y0];
                     ll=yy(8:14,:);
                     ll_g=makima([prob(L+it-3:L+it-1).tf_ad],ll,prob(L+it).tf_ad);
 
-                elseif rem(f,4)==3 && it>=4 % attempt 3NPCM
+                elseif rem(f,4)==3 && it>=4 && ~nang % attempt 3NPCM
 
                     yy=[prob(L+it-4:L+it-1).y0];
                     ll=yy(8:14,:);
@@ -167,15 +177,19 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
                 end
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);
-                
+                if anynan(ll_g)
+                    nang=1;
+                    ex_flag=0;
+                else
+                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
+                end                
 
                 df=FO_ZFP(ll_FO,prob(L+it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
                 end
-                if prob(L+it).tf_ad-TO_ref(id).tf_ad<Dt_max*86400/TU && f>10
+                if prob(L+it).tf_ad-TO_ref(id).tf_ad<Dt_min*86400/TU && f>10
                     ex_flag=1;
                     skip=1;
                 end
@@ -198,6 +212,8 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
         else
             DT=max(min(1.25*(prob(L+it-1).tf_ad-prob(L+it).tf_ad),Dt_max*86400/TU),Dt_min*86400/TU);
         end
+
+        nang=0;
 
         if prob(L+it).tf_ad==TO_ref(id).tf_ad
 

@@ -28,9 +28,6 @@ function FO_SEP_sym_dyn(prob)
     bp=MP(2,:);
     cp=MP(3,:);
 
-    syms u
-    assume('real' & u<1 & u>0)
-
     syms epsilon
     assume(epsilon,'real');
     
@@ -52,26 +49,24 @@ function FO_SEP_sym_dyn(prob)
     c=I*TU^2/LU*g0;
 
     %-med-on---------------------------------------------------------------
-    u=1;
         
     FF_med_uon=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
+        -rr/norm(rr)^3-T/m*llv/norm(llv);
+        -T/c;
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+norm(llv)/m*tr+((lm-1+epsilon)-epsilon)/c*(tr-T/I*ir);
         -llr;
-        -u*norm(llv)*T/m^2];
+        -norm(llv)*T/m^2];
 
     A_med_uon=jacobian(FF_med_uon,y);
 
     %-med-off--------------------------------------------------------------
-    u=0;
-        
+            
     FF_med_uoff=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
+        -rr/norm(rr)^3;
+        0;
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
         -llr;
-        -u*norm(llv)*T/m^2];
+        0];
 
     A_med_uoff=jacobian(FF_med_uoff,y);
 
@@ -81,8 +76,8 @@ function FO_SEP_sym_dyn(prob)
         
     FF_med_umed=[vv;
         -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
-        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/(c)*(tr-T/I*ir);
+        -u*T/c;
+        -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3+u*norm(llv)/m*tr+((lm-1+epsilon)*u-epsilon*u^2)/c*(tr-T/I*ir);
         -llr;
         -u*norm(llv)*T/m^2];
 
@@ -99,26 +94,24 @@ function FO_SEP_sym_dyn(prob)
     c=I*TU^2/LU*g0;
 
     %-max-on---------------------------------------------------------------
-    u=1;
-        
+     
     FF_max_uon=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
+        -rr/norm(rr)^3-T/m*llv/norm(llv);
+        -T/c;
         -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
         -llr;
-        -u*norm(llv)*T/m^2];
+        -norm(llv)*T/m^2];
 
     A_max_uon=jacobian(FF_max_uon,y);
 
     %-max-off--------------------------------------------------------------
-    u=0;
-        
+    
     FF_max_uoff=[vv;
-        -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
+        -rr/norm(rr)^3;
+        0;
         -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
         -llr;
-        -u*norm(llv)*T/m^2];
+        0];
 
     A_max_uoff=jacobian(FF_max_uoff,y);
 
@@ -128,7 +121,7 @@ function FO_SEP_sym_dyn(prob)
         
     FF_max_umed=[vv;
         -rr/norm(rr)^3-u*T/m*llv/norm(llv);
-        -u*T/(c);
+        -u*T/c;
         -3*dot(rr,llv)*rr/norm(rr)^5+llv/norm(rr)^3;
         -llr;
         -u*norm(llv)*T/m^2];
@@ -142,11 +135,6 @@ function FO_SEP_sym_dyn(prob)
         mkdir(dir_name)
         addpath(dir_name)
     end
-
-%     FF_meds=subs(FF_med,u,uS);
-%     FF_maxs=subs(FF_max,u,uS);
-%     A_meds =subs(A_med ,u,uS);
-%     A_maxs =subs(A_max ,u,uS);
 
     matlabFunction(FF_med_uon, A_med_uon ,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_med_uon_dz' ));
     matlabFunction(FF_med_uoff,A_med_uoff,'vars',{y,MP,U,g0,epsilon},'file',fullfile(dir_name,'FO_med_uoff_dz'));
