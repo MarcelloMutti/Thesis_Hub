@@ -56,7 +56,7 @@ function prob = E2F_CONT(prob,id,L)
 
                 df=FO_ZFP(ll_FO,prob(it+1));
 
-                if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
+                if (norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3) && prob(it+1).epsilon==0
                     ex_flag=0;
                 end
 
@@ -188,7 +188,7 @@ function prob = E2F_CONT(prob,id,L)
 
                 df=FO_ZFP(ll_FO,prob(it+1));
 
-                if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
+                if (norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3) && prob(it+1).epsilon==0
                     ex_flag=0;
                 end
                 if (DE/(2^f)<DE_min && E<E_skip) || f>10

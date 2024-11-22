@@ -205,7 +205,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
         
                             if tc<=t || tc>=t+h
                                 
-                                error('you done fucked up')
+                                error('fsolve fail')
         
                             end
         
@@ -252,13 +252,16 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                 h=tc-t;
                 t=tc;
                 z=zc;
+                zp=z;
     
                 Phi_m=reshape(z(15:210),[14,14]);
                 Phi_p=Psi*Phi_m;
-                z(15:210)=reshape(Phi_p,[14*14,1]);
+                zp(15:210)=reshape(Phi_p,[14*14,1]);
     
-                tout = [tout; t];
-                xout = [xout; z.'];
+                tout = [tout; t; t];
+                xout = [xout; z.'; zp.'];
+
+                z=zp;
     
                 Ptype_old=Ptype;
                 utype_old=utype;

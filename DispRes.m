@@ -61,6 +61,7 @@ function [prob] = DispRes(prob,output)
     rvtf=xtf_ad(1:6);
 
     df=zz(end,1:6).'-rvtf;
+    % df2=FO_ZFP(prob.y0(8:14),prob);
 
     r=sqrt(sum(zz(:,1:3).^2,2));
 
@@ -249,11 +250,11 @@ function [prob] = DispRes(prob,output)
         plot(ttd,P)
         if max(P)>Pmax
             hold on
-            plot([ttd(1) ttd(end)],[Pmax,Pmax],'r')
+            plot([ttd(1) ttd(end)],[Pmax,Pmax],'--r','LineWidth',1)
         end
         if min(P)<Pmin
             hold on
-            plot([ttd(1) ttd(end)],[Pmin,Pmin],'r')
+            plot([ttd(1) ttd(end)],[Pmin,Pmin],'--r','LineWidth',1)
         end
         axis tight
         ylabel('$P_{in}\,[W]$')
@@ -303,10 +304,10 @@ function plot3D(t0,tt,zz,targ,u)
 %     rr_on=zz(S<0,1:3);
 %     rr_off=zz(S>=0,1:3);
 
-    r=sqrt(sum(zz(:,1:3).^2,2));
-    Tc=MARGO_param(r);
-    T=Tc(1,:);
-    c=Tc(2,:);
+    % r=sqrt(sum(zz(:,1:3).^2,2));
+    % Tc=MARGO_param(r);
+    % T=Tc(1,:);
+    % c=Tc(2,:);
 
     L=length(u);
     
@@ -320,12 +321,12 @@ function plot3D(t0,tt,zz,targ,u)
     for i=1:L-1
         line([zz(i,1), zz(i+1,1)],[zz(i,2), zz(i+1,2)],[zz(i,3), zz(i+1,3)],'color',[u(i) 0 1-u(i)],'linewidth',u(i)+1);
     end
-    for i=1:L
-        if u(i)~=0
-            th=-u(i)*zz(i,11:13)/norm(zz(i,11:13))*T(i)/c(i);
-            quiver3(zz(i,1),zz(i,2),zz(i,3),th(1),th(2),th(3),'color',[u(i) 0 1-u(i)])
-        end
-    end
+    % for i=1:L
+    %     if u(i)~=0
+    %         th=-u(i)*zz(i,11:13)/norm(zz(i,11:13))*T(i)/zz(i,7);
+    %         quiver3(zz(i,1),zz(i,2),zz(i,3),th(1),th(2),th(3),'color',[u(i) 0 1-u(i)])
+    %     end
+    % end
     view([55, 55])    
     xlim([-1.5 1.5])
     ylim([-1.5 1.5])
