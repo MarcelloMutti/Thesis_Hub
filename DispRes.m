@@ -75,51 +75,65 @@ function [prob] = DispRes(prob,output)
 
     if ep>0
 
-        u=1.*(Se<-ep)+(ep-Se)./(2*ep).*(abs(Se)<=ep)+0;
+        u_d=1.*(Se<-ep)+(ep-Se)./(2*ep).*(abs(Se)<=ep)+0;
+        % u_d=u;
+        % ttd=ttd;
+        % zz=zz;
 
     else
-
-        u=1.*(Se<0)+0;
-
-    end
-
-    % only for ep=0
-    if ep==0
-        s=1;
-        u0=u(s);
         
-        ttd_d=[];   % used for bang-bang display
-        u_d=[];     % used for bang-bang display
-        zz_d=[];
+        u_d=zeros(size(Se));
+        ut=1.*(Se(1)<ep)+0;
+        u_d(1)=ut;
 
-        idu=0;
-        
-        while ~isempty(idu)
-            idu=find(u(s:end)~=u0,1,'first')+s-1;
-        
-            if ~isempty(idu)
-            
-                u_d=[u_d; u(s:idu-1); u(idu-u0)];
-                ttd_d=[ttd_d; ttd(s:idu-1); ttd(idu-1+u0)];
-                zz_d=[zz_d; zz(s:idu-1,:); zz(idu-1+u0,:)];
-                
-                u0=u(idu);
-                s=idu;
-        
+        for j=2:length(Se)
+            if ttd(j)==ttd(j-1) && isapprox(Se(j),ep,AbsoluteTolerance=1e-10)
+                u_d(j)=1-ut;
+                ut=u_d(j);
             else
-        
-                u_d=[u_d; u(s:end)];
-                ttd_d=[ttd_d; ttd(s:end)];
-                zz_d=[zz_d; zz(s:end,:)];
-        
+                u_d(j)=ut;
             end
-        
         end
-    else
-        u_d=u;
-        ttd_d=ttd;
-        zz_d=zz;
+
     end
+
+    % % only for ep=0
+    % if ep==0
+    %     s=1;
+    %     u0=u(s);
+    % 
+    %     ttd_d=[];   % used for bang-bang display
+    %     u_d=[];     % used for bang-bang display
+    %     zz_d=[];
+    % 
+    %     idu=0;
+    % 
+    %     while ~isempty(idu)
+    %         idu=find(u(s:end)~=u0,1,'first')+s-1;
+    % 
+    %         if ~isempty(idu)
+    % 
+    %             u_d=[u_d; u(s:idu-1); u(idu-u0)];
+    %             ttd_d=[ttd_d; ttd(s:idu-1); ttd(idu-1+u0)];
+    %             zz_d=[zz_d; zz(s:idu-1,:); zz(idu-1+u0,:)];
+    % 
+    %             u0=u(idu);
+    %             s=idu;
+    % 
+    %         else
+    % 
+    %             u_d=[u_d; u(s:end)];
+    %             ttd_d=[ttd_d; ttd(s:end)];
+    %             zz_d=[zz_d; zz(s:end,:)];
+    % 
+    %         end
+    % 
+    %     end
+    % else
+    %     u_d=u;
+    %     ttd_d=ttd;
+    %     zz_d=zz;
+    % end
 
     H=Hamil(tt,zz,prob);
 
@@ -133,7 +147,7 @@ function [prob] = DispRes(prob,output)
 
     if output==1
 
-        plot3D(t0,ttd_d,zz_d,targ,u_d);
+        plot3D(t0,ttd,zz,targ,u_d);
     
         fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',0),et2MJD2000(t0))
         fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',0),et2MJD2000(tf))
@@ -148,7 +162,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(4,2,3)
-        plot(ttd_d,u_d)
+        plot(ttd,u_d)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')
@@ -222,7 +236,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(3,2,1)
-        plot(ttd_d,u_d)
+        plot(ttd,u_d)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')

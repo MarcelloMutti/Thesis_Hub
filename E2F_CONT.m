@@ -14,8 +14,9 @@ function prob = E2F_CONT(prob,id,L)
     DE_max=0.05;
     DE=DE_max;
 
-    DE_min=1e-5;
-    E_skip=5e-4;
+    DE_min=1e-6;
+    E_skip=1e-5;
+    % mp_tol=1e-8;
 
 %     E=prob.epsilon;
 
@@ -188,11 +189,12 @@ function prob = E2F_CONT(prob,id,L)
 
                 df=FO_ZFP(ll_FO,prob(it+1));
 
-                if (norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3) && prob(it+1).epsilon==0
+                if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
                 end
                 if (DE/(2^f)<DE_min && E<E_skip) || f>10
                     skip=1;
+                    check=(ex_flag>0 && norm(df(1:3))*LU<10 && norm(df(4:6))*LU/TU<1e-3);
                     ex_flag=1;
                 end
 
@@ -220,9 +222,11 @@ function prob = E2F_CONT(prob,id,L)
             
         end
 
-
-        wb1=waitbar((1-E)/(1-E_min),wb1,sprintf('EO to FO continuation [%.2f %%] of %.0f/%.0f TO solution',(1-E)/(1-E_min)*100,id,L));
-
+        if iscomplete==0
+            wb1=waitbar((1-E)/(1-E_min),wb1,sprintf('EO to FO continuation [%.2f %%] of %.0f/%.0f TO solution',(1-E)/(1-E_min)*100,id,L));
+        else
+            wb1=waitbar(1,wb1,sprintf('EO to FO continuation [%.2f %%] of %.0f/%.0f TO solution',100,id,L));
+        end
 
         it=it+1;
 
@@ -265,7 +269,7 @@ function prob = E2F_CONT(prob,id,L)
     if skip==0
         prob=prob(end);
     else
-        prob=prob(end-1);
+        prob=prob(end-1+check);
     end
 
 

@@ -22,7 +22,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 %      b7 = [ 13451932/455176623, 0, 0, 0, 0, -808719846/976000145, 1757004468/5645159321, 656045339/265891186,   -3867574721/1518517206,   465885868/322736535,  53011238/667516719,                  2/45,    0]';
     
 
-    fsopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
+    fsopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',eps,'OptimalityTolerance',eps,'Display','none');
     fzopt=optimset('Display','notify','FunValCheck','on');
     
     pow = 1/8; % power for step control
@@ -33,18 +33,18 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
     end
     
     % Maximal step size
-    hmax = (tspan(2) - tspan(1))/10;
+    hmax = (tspan(2) - tspan(1))/100;
     
     % Minimal step size
     hmin = 16*eps;
     
     % initial step size
-    h = (tspan(2) - tspan(1))/50;
-    if h>0.1
-      h=0.1;
-    elseif h>hmax 
-      h = hmax;
-    end
+    h = hmax;
+    % if h>0.1
+    %   h=0.1;
+    % elseif h>hmax 
+    %   h = hmax;
+    % end
     
     %  A relative error tolerance that applies to all components of the solution vector. 
     Tol=1e-12;
@@ -115,7 +115,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
         % Truncation error 
         err = norm(x7-x8);
-    
+      
         % Estimate the error and the acceptable error
         step_err = norm(err,'inf');
         tau = Tol*max(norm(z,'inf'),1.0);
@@ -134,10 +134,10 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
             r_old=norm(z(1:3));
             [~,~,Sp_old]=MARGO_param(r_old);
 
-            c=Tc(2);
-            cp=Tcp(2);
+            % c=Tc(2);
+            % cp=Tcp(2);
 
-            dtSe=c/x8(7)*dot(x8(8:10),x8(11:13))/norm(x8(11:13))-norm(x8(11:13))/x8(7)*cp/r*dot(x8(1:3),x8(4:6));
+            % dtSe=c/x8(7)*dot(x8(8:10),x8(11:13))/norm(x8(11:13))-norm(x8(11:13))/x8(7)*cp/r*dot(x8(1:3),x8(4:6));
 
             Se_old=SwFun(t,z,prob.isFO);
             Se=SwFun(t+h,x8,prob.isFO);
@@ -157,12 +157,12 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                 end
             end
 
-            if isapprox(abs(Se),ep,'tight') ...                                         % Sw=+-ep
-                || (isapprox(abs(dtSe),0,'tight') && isapprox(abs(Se),ep,'tight')) ... % dubious utility
-                || (~strcmp(Ptype,Ptype_old) && ~strcmp(utype,utype_old)) ...   % Double switch
+            if (~strcmp(Ptype,Ptype_old) && ~strcmp(utype,utype_old)) ...   % Double switch
                 || (ep~=0 && strcmp(utype,'on') && strcmp(utype_old,'off')) ... % off->on in EO
                 || (ep~=0 && strcmp(utype,'off') && strcmp(utype_old,'on')) ... % on->off in EO
-                || ((~strcmp(Ptype,Ptype_old) || ~strcmp(utype,utype_old)) && (isapprox(abs(Se_old),ep,'tight') || isapprox(Sp_old,prob.Plim(2),'tight')))  % force 1step after switching
+                % || isapprox(abs(Se),ep,'tight') ...                           % Sw=+-ep
+                % || (isapprox(abs(dtSe),0,'tight') && isapprox(abs(Se),ep,'tight')) ... % dubious utility
+                % || ((~strcmp(Ptype,Ptype_old) || ~strcmp(utype,utype_old)) && (isapprox(abs(Se_old),ep,'tight') || isapprox(Sp_old,prob.Plim(2),'tight')))  % force 1step after switching
 
                 h=h*0.75;
 
@@ -175,17 +175,19 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
                 while ex_flag<=0
 
-                    if ~strcmp(Ptype,Ptype_old)
+                    tc=[];
+
+                    if ~strcmp(Ptype,Ptype_old) && power_switching(t,t,z,Ptype_old,utype_old,prob)*power_switching(t+h,t,z,Ptype_old,utype_old,prob)<0
 
                         [tc,cr_v,ex_flag]=fzero(@(T) power_switching(T,t,z,Ptype_old,utype_old,prob),[t, t+h],fzopt);
 
-                    elseif ~strcmp(utype,utype_old)
+                    elseif ~strcmp(utype,utype_old) && throttle_switching(t,t,z,Ptype_old,utype_old,utype,prob)*throttle_switching(t+h,t,z,Ptype_old,utype_old,utype,prob)<0
 
                         [tc,cr_v,ex_flag]=fzero(@(T) throttle_switching(T,t,z,Ptype_old,utype_old,utype,prob),[t, t+h],fzopt);
 
                     end
 
-                    if tc<=t || tc>=t+h
+                    if isempty(tc) || (tc<t || tc>t+h)
                         
                         % newton attempt (fsolve)
                         ex_flag=0;
@@ -203,9 +205,12 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
         
                             end
         
-                            if tc<=t || tc>=t+h
+                            if tc<t || tc>t+h
                                 
-                                error('fsolve fail')
+                                % BREAKS HERE
+                                % error('fsolve fail')
+                                ex_flag=0;
+                                tg=unifrnd(t,t+h);
         
                             end
         
@@ -218,6 +223,9 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                 %----begin switch block
 
                 [~,zc]=step(t,z,tc-t,Ptype_old,utype_old,ep);
+
+                % perform tentative step from zc tc, to see if crosses or
+                % comes back, skip correction in case
     
                 rc=zc(1:3);
                 vc=zc(4:6);
@@ -249,7 +257,14 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
                 end
     
-                h=tc-t;
+                % h=tc-t;
+
+                if abs(tc-t)<Tol
+                    tang=1;
+                else
+                    tang=0;
+                end
+
                 t=tc;
                 z=zc;
                 zp=z;
@@ -258,10 +273,25 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                 Phi_p=Psi*Phi_m;
                 zp(15:210)=reshape(Phi_p,[14*14,1]);
     
-                tout = [tout; t; t];
-                xout = [xout; z.'; zp.'];
 
-                z=zp;
+                if tang
+
+                    [~,x8]=step(tout(end),xout(end-1,:).',h,Ptype,utype,ep);
+
+                    tout = [tout; t; t; tout(end)+h];
+                    xout = [xout; z.'; zp.'; x8.'];
+                    
+                    t=tout(end);
+                    z=x8;
+
+                else
+
+                    tout = [tout; t; t];
+                    xout = [xout; z.'; zp.'];
+    
+                    z=zp;
+
+                end
     
                 Ptype_old=Ptype;
                 utype_old=utype;
@@ -297,8 +327,10 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
             step_err = eps*10.0;
         end
 
-        if crossing==0
+        if crossing==0 && ~isnan(step_err)
             h = min(hmax, 0.9*h*(tau/step_err)^pow);
+        elseif crossing==0 && isnan(step_err)
+            h = h*0.75;
         end
 
         if (abs(h) <= eps) 
