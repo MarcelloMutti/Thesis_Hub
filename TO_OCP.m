@@ -17,7 +17,7 @@ clear all; close all; clc;
 str_wo='2022-12-31 12:00 UTC';
 str_wc='2024-12-31 12:00 UTC';
 
-targ='3702319';
+targ='3054374';
 m0=22.6;  % [kg]
 Pmax=120; % [W]
 Pmin=20;  % [W]

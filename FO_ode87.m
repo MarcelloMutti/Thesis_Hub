@@ -125,18 +125,18 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
             % step sw eval @ t+h ------------------------------------------
             r=norm(x8(1:3));
-            [Tc,Tcp,Sp]=MARGO_param(r);
+            [~,~,Sp]=MARGO_param(r);
             if Sp<prob.Plim(2)
                 Ptype='med';
             else
                 Ptype='max';
             end
+
             r_old=norm(z(1:3));
             [~,~,Sp_old]=MARGO_param(r_old);
 
             % c=Tc(2);
             % cp=Tcp(2);
-
             % dtSe=c/x8(7)*dot(x8(8:10),x8(11:13))/norm(x8(11:13))-norm(x8(11:13))/x8(7)*cp/r*dot(x8(1:3),x8(4:6));
 
             Se_old=SwFun(t,z,prob.isFO);
@@ -160,9 +160,10 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
             if (~strcmp(Ptype,Ptype_old) && ~strcmp(utype,utype_old)) ...   % Double switch
                 || (ep~=0 && strcmp(utype,'on') && strcmp(utype_old,'off')) ... % off->on in EO
                 || (ep~=0 && strcmp(utype,'off') && strcmp(utype_old,'on')) ... % on->off in EO
-                % || isapprox(abs(Se),ep,'tight') ...                           % Sw=+-ep
+                || ((~strcmp(Ptype,Ptype_old) || ~strcmp(utype,utype_old)) && (isapprox(abs(Se_old),ep,'tight') || isapprox(Sp_old,prob.Plim(2),'tight')))  % force 1step after switching
+                % || isequal(abs(Se),ep) ...                            % Sw=+-ep
                 % || (isapprox(abs(dtSe),0,'tight') && isapprox(abs(Se),ep,'tight')) ... % dubious utility
-                % || ((~strcmp(Ptype,Ptype_old) || ~strcmp(utype,utype_old)) && (isapprox(abs(Se_old),ep,'tight') || isapprox(Sp_old,prob.Plim(2),'tight')))  % force 1step after switching
+                
 
                 h=h*0.75;
 
@@ -206,8 +207,7 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
                             end
         
                             if tc<t || tc>t+h
-                                
-                                % BREAKS HERE
+
                                 % error('fsolve fail')
                                 ex_flag=0;
                                 tg=unifrnd(t,t+h);
@@ -222,79 +222,117 @@ function [tout,xout] = FO_ode87(prob,tspan,z0)
 
                 %----begin switch block
 
-                [~,zc]=step(t,z,tc-t,Ptype_old,utype_old,ep);
+                [~,zc]=step(t,z,tc-t,Ptype_old,utype_old,ep);           % step to crossing
 
-                % perform tentative step from zc tc, to see if crosses or
-                % comes back, skip correction in case
-    
-                rc=zc(1:3);
-                vc=zc(4:6);
-                mc=zc(7);
-                llrc=zc(8:10);
-                llvc=zc(11:13);
-    
-                dzc_m=FO_2BP_SEP(tc,zc,Ptype_old,utype_old,ep);
-                dzc_p=FO_2BP_SEP(tc,zc,Ptype,utype,ep);
+                % perform tentative step from zc tc
 
-                if ~strcmp(Ptype,Ptype_old)
-    
-                    Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.'/dot(rc,vc),zeros(1,11)];
+                [~,z_pred]=step(tc,zc,t+h-tc,Ptype_old,utype_old,ep);   % predictive step
 
-                elseif (~strcmp(utype,utype_old) && ep==0)
-
-                    [Tc,Tcp]=MARGO_param(norm(rc));
-                    c=Tc(2);    % ex vel
-                    cp=Tcp(2);  % dc/dr
-
-                    DySe=[-norm(llvc)/mc*cp*rc.'/norm(rc), zeros(1,3), c*norm(llvc)/mc^2, zeros(1,3), -c/mc*llvc.'/norm(llvc), -1];
-                    DtSe=c/mc*dot(llrc,llvc)/norm(llvc)-norm(llvc)*cp/mc*dot(rc,vc)/norm(rc);
-
-                    Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*DySe/DtSe;
-
+                [~,~,Sp_p]=MARGO_param(norm(z_pred(1:3)));
+                if Sp_p<prob.Plim(2)
+                    Ptype_p='med';
                 else
-
-                    Psi=eye(14);
-
-                end
-    
-                % h=tc-t;
-
-                if abs(tc-t)<Tol
-                    tang=1;
-                else
-                    tang=0;
+                    Ptype_p='max';
                 end
 
-                t=tc;
-                z=zc;
-                zp=z;
-    
-                Phi_m=reshape(z(15:210),[14,14]);
-                Phi_p=Psi*Phi_m;
-                zp(15:210)=reshape(Phi_p,[14*14,1]);
-    
+                Se_p=SwFun(t+h,z_pred,prob.isFO);
+                if ep~=0
+                    if Se_p<-ep
+                        utype_p='on';
+                    elseif Se_p>ep
+                        utype_p='off';
+                    else
+                        utype_p='med';
+                    end
+                else
+                    if Se_p<0
+                        utype_p='on';
+                    else
+                        utype_p='off';
+                    end
+                end
 
-                if tang
+                if (~strcmp(utype,utype_old) && strcmp(utype_p,utype_old)) || (~strcmp(Ptype,Ptype_old) && strcmp(Ptype_p,Ptype_old))
+                    % tangency without switch
 
-                    [~,x8]=step(tout(end),xout(end-1,:).',h,Ptype,utype,ep);
+                    tout=[tout; tc; t+h];
+                    xout=[xout; zc.'; z_pred.'];
 
-                    tout = [tout; t; t; tout(end)+h];
-                    xout = [xout; z.'; zp.'; x8.'];
-                    
-                    t=tout(end);
-                    z=x8;
+                    t=t+h;
+                    z=z_pred;
 
                 else
-
-                    tout = [tout; t; t];
-                    xout = [xout; z.'; zp.'];
     
-                    z=zp;
+                    rc=zc(1:3);
+                    vc=zc(4:6);
+                    mc=zc(7);
+                    llrc=zc(8:10);
+                    llvc=zc(11:13);
+        
+                    dzc_m=FO_2BP_SEP(tc,zc,Ptype_old,utype_old,ep);
+                    dzc_p=FO_2BP_SEP(tc,zc,Ptype,utype,ep);
+    
+                    if ~strcmp(Ptype,Ptype_old)
+        
+                        Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.'/dot(rc,vc),zeros(1,11)];
+    
+                    elseif (~strcmp(utype,utype_old) && ep==0)
+    
+                        [Tc,Tcp]=MARGO_param(norm(rc));
+                        c=Tc(2);    % ex vel
+                        cp=Tcp(2);  % dc/dr
+    
+                        DySe=[-norm(llvc)/mc*cp*rc.'/norm(rc), zeros(1,3), c*norm(llvc)/mc^2, zeros(1,3), -c/mc*llvc.'/norm(llvc), -1];
+                        DtSe=c/mc*dot(llrc,llvc)/norm(llvc)-norm(llvc)*cp/mc*dot(rc,vc)/norm(rc);
+    
+                        Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*DySe/DtSe;
+    
+                    else
+    
+                        Psi=eye(14);
+    
+                    end
+        
+                    h=tc-t;
+    
+                    % if abs(tc-t)<Tol
+                    %     tang=1;
+                    % else
+                    %     tang=0;
+                    % end
+    
+                    t=tc;
+                    z=zc;
+                    zp=z;
+        
+                    Phi_m=reshape(z(15:210),[14,14]);
+                    Phi_p=Psi*Phi_m;
+                    zp(15:210)=reshape(Phi_p,[14*14,1]);
+        
+    
+                    % if tang
+                    % 
+                    %     [~,x8]=step(tout(end),xout(end-1,:).',h,Ptype,utype,ep);
+                    % 
+                    %     tout = [tout; t; t; tout(end)+h];
+                    %     xout = [xout; z.'; zp.'; x8.'];
+                    % 
+                    %     t=tout(end);
+                    %     z=x8;
+                    % 
+                    % else
+    
+                        tout = [tout; t; t];
+                        xout = [xout; z.'; zp.'];
+        
+                        z=zp;
+    
+                    % end
+
+                    Ptype_old=Ptype;
+                    utype_old=utype;
 
                 end
-    
-                Ptype_old=Ptype;
-                utype_old=utype;
     
                 crossing=1;
 

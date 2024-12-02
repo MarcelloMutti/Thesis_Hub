@@ -22,8 +22,9 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
 %      b7 = [ 13451932/455176623, 0, 0, 0, 0, -808719846/976000145, 1757004468/5645159321, 656045339/265891186,   -3867574721/1518517206,   465885868/322736535,  53011238/667516719,                  2/45,    0]';
     
 
-    fopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',1e-12,'OptimalityTolerance',1e-12,'Display','none');
-    
+    fsopt=optimoptions("fsolve",'SpecifyObjectiveGradient',true,'FunctionTolerance',eps,'OptimalityTolerance',eps,'Display','none');
+    fzopt=optimset('Display','notify','FunValCheck','on');
+
     pow = 1/8; % power for step control
     
     % Check inputs
@@ -32,18 +33,18 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
     end
     
     % Maximal step size
-    hmax = (tspan(2) - tspan(1))/10;
+    hmax = (tspan(2) - tspan(1))/100;
     
     % Minimal step size
     hmin = 16*eps;
     
     % initial step size
-    h = (tspan(2) - tspan(1))/50;
-    if h>0.1
-      h=0.1;
-    elseif h>hmax 
-      h = hmax;
-    end
+    h = hmax;
+    % if h>0.1
+    %   h=0.1;
+    % elseif h>hmax 
+    %   h = hmax;
+    % end
     
     %  A relative error tolerance that applies to all components of the solution vector. 
     Tol=1e-12;
@@ -56,7 +57,7 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
     
     t = t0;
     z = z0(:);          % start point
-    f = z*zeros(1,13);  % array f for RHS calculation
+    % f = z*zeros(1,13);  % array f for RHS calculation
     tout = t;
     xout = z.';
     
@@ -112,55 +113,111 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
                 Ptype='max';
             end
 
-            if ~strcmp(Ptype,Ptype_old)
+            r_old=norm(z(1:3));
+            [~,~,Sp_old]=MARGO_param(r_old);
 
+            if ~strcmp(Ptype,Ptype_old) && isapprox(Sp_old,prob.Plim(2),'tight')
+
+                h=h*0.75;
+
+                crossing=1;
+
+            elseif ~strcmp(Ptype,Ptype_old)
+
+                % bisection attempt (fzero)
                 ex_flag=0;
-                tg=t+h/2;
 
                 while ex_flag<=0
 
-                    tc=fsolve(@(T) power_switching(T,t,z,Ptype_old,prob),tg,fopt);
+                    tc=[];
 
-                    if tc<=t || tc>=t+h
+                    if power_switching(t,t,z,Ptype_old,prob)*power_switching(t+h,t,z,Ptype_old,prob)<0
+
+                        [tc,cr_v,ex_flag]=fzero(@(T) power_switching(T,t,z,Ptype_old,prob),[t, t+h],fzopt);
+
+                    end
+
+                    if isempty(tc) || (tc<t || tc>t+h)
+                        
+                        % newton attempt (fsolve)
                         ex_flag=0;
-                        tg=t+h*rand(1,1);
-                    else
-                        ex_flag=1;
+                        tg=t+h/2;
+
+                        while ex_flag<=0
+
+                            [tc,cr_v,ex_flag]=fsolve(@(T) power_switching(T,t,z,Ptype_old,prob),tg,fsopt);
+
+                            if tc<t || tc>t+h
+
+                                % error('fsolve fail')
+                                ex_flag=0;
+                                tg=unifrnd(t,t+h);
+    
+                            end
+        
+                        end
+                    
                     end
 
                 end
     
-%                 odopt=odeset('RelTol',1e-12,'AbsTol',1e-12);
-%                 [~,zz]=ode78(@(t,y) TO_2BP_SEP(t,y,Ptype_old),[t,tc],z,odopt);
-%     
-%                 zc=zz(end,:).';
+                %----begin switch block
 
-                [~,zc]=step(t,z,tc-t,Ptype_old);
+                [~,zc]=step(t,z,tc-t,Ptype_old);            % step to crossing
+
+                % perform tentative step from zc tc
+
+                [~,z_pred]=step(tc,zc,t+h-tc,Ptype_old);    % predictive step
+
+                [~,~,Sp_p]=MARGO_param(norm(z_pred(1:3)));
+                if Sp_p<prob.Plim(2)
+                    Ptype_p='med';
+                else
+                    Ptype_p='max';
+                end
+
+                if ~strcmp(Ptype,Ptype_old) && strcmp(Ptype_p,Ptype_old)
+                    % tangency without switch
+
+                    tout=[tout; tc; t+h];
+                    xout=[xout; zc.'; z_pred.'];
+
+                    t=t+h;
+                    z=z_pred;
+
+                else
     
-                rc=zc(1:3);
-                vc=zc(4:6);
+                    rc=zc(1:3);
+                    vc=zc(4:6);
+        
+                    dzc_m=TO_2BP_SEP(tc,zc,Ptype_old);
+                    dzc_p=TO_2BP_SEP(tc,zc,Ptype);
+        
+                    Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.',zeros(1,11)]./dot(rc,vc);
+        
+                    h=tc-t;
+                    t=tc;
+                    z=zc;
+                    zp=z;
+        
+                    Phi_m=reshape(z(15:210),[14,14]);
+                    Phi_p=Psi*Phi_m;
+                    zp(15:210)=reshape(Phi_p,[14*14,1]);
+        
+                    tout = [tout; t; t];
+                    xout = [xout; z.'; zp.'];
     
-                dzc_m=TO_2BP_SEP(tc,zc,Ptype_old);
-                dzc_p=TO_2BP_SEP(tc,zc,Ptype);
+                    z=zp;
+        
+                    Ptype_old=Ptype;
+
+                end
     
-                Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.',zeros(1,11)]./dot(rc,vc);
+                crossing=1;  
+
+                %----end switch block     
     
-                h=tc-t;
-                t=tc;
-                z=zc;
-    
-                Phi_m=reshape(z(15:210),[14,14]);
-                Phi_p=Psi*Phi_m;
-                z(15:210)=reshape(Phi_p,[14*14,1]);
-    
-                tout = [tout; t];
-                xout = [xout; z.'];
-    
-                Ptype_old=Ptype;
-    
-                crossing=1;       
-    
-            else
+            else    % no switching detected
         
                 t = t + h;
                 z = x8; 
@@ -187,8 +244,10 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
             step_err = eps*10.0;
         end
 
-        if crossing==0
+        if crossing==0 && ~isnan(step_err)
             h = min(hmax, 0.9*h*(tau/step_err)^pow);
+        elseif crossing==0 && isnan(step_err)
+            h = h*0.75;
         end
 
         if (abs(h) <= eps) 

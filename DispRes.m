@@ -75,23 +75,23 @@ function [prob] = DispRes(prob,output)
 
     if ep>0
 
-        u_d=1.*(Se<-ep)+(ep-Se)./(2*ep).*(abs(Se)<=ep)+0;
+        u=1.*(Se<-ep)+(ep-Se)./(2*ep).*(abs(Se)<=ep)+0;
         % u_d=u;
         % ttd=ttd;
         % zz=zz;
 
     else
         
-        u_d=zeros(size(Se));
+        u=zeros(size(Se));
         ut=1.*(Se(1)<ep)+0;
-        u_d(1)=ut;
+        u(1)=ut;
 
         for j=2:length(Se)
             if ttd(j)==ttd(j-1) && isapprox(Se(j),ep,AbsoluteTolerance=1e-10)
-                u_d(j)=1-ut;
-                ut=u_d(j);
+                u(j)=1-ut;
+                ut=u(j);
             else
-                u_d(j)=ut;
+                u(j)=ut;
             end
         end
 
@@ -135,7 +135,7 @@ function [prob] = DispRes(prob,output)
     %     zz_d=zz;
     % end
 
-    H=Hamil(tt,zz,prob);
+    H=Hamil(tt,zz,u,prob);
 
     prob.mf=mf;
     prob.mp=mp;
@@ -147,7 +147,7 @@ function [prob] = DispRes(prob,output)
 
     if output==1
 
-        plot3D(t0,ttd,zz,targ,u_d);
+        plot3D(t0,ttd,zz,targ,u);
     
         fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',0),et2MJD2000(t0))
         fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',0),et2MJD2000(tf))
@@ -162,7 +162,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(4,2,3)
-        plot(ttd,u_d)
+        plot(ttd,u)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')
@@ -236,7 +236,7 @@ function [prob] = DispRes(prob,output)
 
         %-throttle---------------------------------------------------------
         subplot(3,2,1)
-        plot(ttd,u_d)
+        plot(ttd,u)
         axis tight
         ylim([0 1.1])
         ylabel('$u$')

@@ -83,7 +83,7 @@ TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 % [~,~,FO_prob]=FO_ZFP(ll_FO,FO_prob);
 % FO_prob=DispRes(FO_prob);
 
-load('2012TOs.mat');
+load('unc_param_mats/2012TOs.mat');
 
 EO_prob=FO_CONT(FO_prob,TO_prob);
 
