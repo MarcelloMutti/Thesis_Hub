@@ -29,23 +29,23 @@ end
 
 function [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,utype,epsilon)
 
-    if strcmp(Ptype,'med')
-
-        if strcmp(utype,'on')
-
-            [dy,A]=FO_med_uon_dz(y,MP,U,g0,epsilon);
-
-        elseif strcmp(utype,'off')
-
-            [dy,A]=FO_med_uoff_dz(y,MP,U,g0,epsilon);
-
-        else
-
-            [dy,A]=FO_med_umed_dz(y,MP,U,g0,epsilon);
-
-        end
-
-    elseif strcmp(Ptype,'max')
+    % if strcmp(Ptype,'med')
+    % 
+    %     if strcmp(utype,'on')
+    % 
+    %         [dy,A]=FO_med_uon_dz(y,MP,U,g0,epsilon);
+    % 
+    %     elseif strcmp(utype,'off')
+    % 
+    %         [dy,A]=FO_med_uoff_dz(y,MP,U,g0,epsilon);
+    % 
+    %     else
+    % 
+    %         [dy,A]=FO_med_umed_dz(y,MP,U,g0,epsilon);
+    % 
+    %     end
+    % 
+    % elseif strcmp(Ptype,'max')
 
         if strcmp(utype,'on')
 
@@ -61,6 +61,6 @@ function [dy,A]=FO_SEP_dz(y,MP,U,g0,Ptype,utype,epsilon)
 
         end
 
-    end
+    % end
 
 end

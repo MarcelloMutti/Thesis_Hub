@@ -239,7 +239,7 @@ hold on
 contour(X,Y,Z,[2.8 2.8],'k--','LineWidth',2)
 plot(et2MJD2000([TO_ref.t0]),TU/86400*([TO_ref.tf_ad]),'r','LineWidth',2)
 % plot(et2MJD2000([prob(isPareto).t0]),[prob(isPareto).tf_ad]*TU/86400,'xk','linewidth',2)
-plot(et2MJD2000([prob([prob(:).epsilon]~=0).t0]),[prob([prob(:).epsilon]~=0).tf_ad]*TU/86400,'ok','linewidth',2)
+% plot(et2MJD2000([prob([prob(:).epsilon]~=0).t0]),[prob([prob(:).epsilon]~=0).tf_ad]*TU/86400,'ok','linewidth',2)
 xlabel('$$t_0\, [MJD2000]$$','Interpreter','latex')
 ylabel('$$ToF\, [days]$$','Interpreter','latex')
 c.Label.String='mp';

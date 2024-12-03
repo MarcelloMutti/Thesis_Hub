@@ -104,120 +104,120 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
         % Update the solution only if the error is acceptable
         if step_err <= tau
 
-            % step sw eval @ t+h --------------------------------------------------
-            r=norm(x8(1:3));
-            [~,~,Sp]=MARGO_param(r);
-            if Sp<prob.Plim(2)
-                Ptype='med';
-            else
-                Ptype='max';
-            end
-
-            r_old=norm(z(1:3));
-            [~,~,Sp_old]=MARGO_param(r_old);
-
-            if ~strcmp(Ptype,Ptype_old) && isapprox(Sp_old,prob.Plim(2),'tight')
-
-                h=h*0.75;
-
-                crossing=1;
-
-            elseif ~strcmp(Ptype,Ptype_old)
-
-                % bisection attempt (fzero)
-                ex_flag=0;
-
-                while ex_flag<=0
-
-                    tc=[];
-
-                    if power_switching(t,t,z,Ptype_old,prob)*power_switching(t+h,t,z,Ptype_old,prob)<0
-
-                        [tc,cr_v,ex_flag]=fzero(@(T) power_switching(T,t,z,Ptype_old,prob),[t, t+h],fzopt);
-
-                    end
-
-                    if isempty(tc) || (tc<t || tc>t+h)
-                        
-                        % newton attempt (fsolve)
-                        ex_flag=0;
-                        tg=t+h/2;
-
-                        while ex_flag<=0
-
-                            [tc,cr_v,ex_flag]=fsolve(@(T) power_switching(T,t,z,Ptype_old,prob),tg,fsopt);
-
-                            if tc<t || tc>t+h
-
-                                % error('fsolve fail')
-                                ex_flag=0;
-                                tg=unifrnd(t,t+h);
-    
-                            end
-        
-                        end
-                    
-                    end
-
-                end
-    
-                %----begin switch block
-
-                [~,zc]=step(t,z,tc-t,Ptype_old);            % step to crossing
-
-                % perform tentative step from zc tc
-
-                [~,z_pred]=step(tc,zc,t+h-tc,Ptype_old);    % predictive step
-
-                [~,~,Sp_p]=MARGO_param(norm(z_pred(1:3)));
-                if Sp_p<prob.Plim(2)
-                    Ptype_p='med';
-                else
-                    Ptype_p='max';
-                end
-
-                if ~strcmp(Ptype,Ptype_old) && strcmp(Ptype_p,Ptype_old)
-                    % tangency without switch
-
-                    tout=[tout; tc; t+h];
-                    xout=[xout; zc.'; z_pred.'];
-
-                    t=t+h;
-                    z=z_pred;
-
-                else
-    
-                    rc=zc(1:3);
-                    vc=zc(4:6);
-        
-                    dzc_m=TO_2BP_SEP(tc,zc,Ptype_old);
-                    dzc_p=TO_2BP_SEP(tc,zc,Ptype);
-        
-                    Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.',zeros(1,11)]./dot(rc,vc);
-        
-                    h=tc-t;
-                    t=tc;
-                    z=zc;
-                    zp=z;
-        
-                    Phi_m=reshape(z(15:210),[14,14]);
-                    Phi_p=Psi*Phi_m;
-                    zp(15:210)=reshape(Phi_p,[14*14,1]);
-        
-                    tout = [tout; t; t];
-                    xout = [xout; z.'; zp.'];
-    
-                    z=zp;
-        
-                    Ptype_old=Ptype;
-
-                end
-    
-                crossing=1;  
-
-                %----end switch block     
-    
-            else    % no switching detected
+            % % step sw eval @ t+h --------------------------------------------------
+            % r=norm(x8(1:3));
+            % [~,~,Sp]=MARGO_param(r);
+            % if Sp<prob.Plim(2)
+            %     Ptype='med';
+            % else
+            %     Ptype='max';
+            % end
+            % 
+            % r_old=norm(z(1:3));
+            % [~,~,Sp_old]=MARGO_param(r_old);
+            % 
+            % if ~strcmp(Ptype,Ptype_old) && isapprox(Sp_old,prob.Plim(2),'tight')
+            % 
+            %     h=h*0.75;
+            % 
+            %     crossing=1;
+            % 
+            % elseif ~strcmp(Ptype,Ptype_old)
+            % 
+            %     % bisection attempt (fzero)
+            %     ex_flag=0;
+            % 
+            %     while ex_flag<=0
+            % 
+            %         tc=[];
+            % 
+            %         if power_switching(t,t,z,Ptype_old,prob)*power_switching(t+h,t,z,Ptype_old,prob)<0
+            % 
+            %             [tc,cr_v,ex_flag]=fzero(@(T) power_switching(T,t,z,Ptype_old,prob),[t, t+h],fzopt);
+            % 
+            %         end
+            % 
+            %         if isempty(tc) || (tc<t || tc>t+h)
+            % 
+            %             % newton attempt (fsolve)
+            %             ex_flag=0;
+            %             tg=t+h/2;
+            % 
+            %             while ex_flag<=0
+            % 
+            %                 [tc,cr_v,ex_flag]=fsolve(@(T) power_switching(T,t,z,Ptype_old,prob),tg,fsopt);
+            % 
+            %                 if tc<t || tc>t+h
+            % 
+            %                     % error('fsolve fail')
+            %                     ex_flag=0;
+            %                     tg=unifrnd(t,t+h);
+            % 
+            %                 end
+            % 
+            %             end
+            % 
+            %         end
+            % 
+            %     end
+            % 
+            %     %----begin switch block
+            % 
+            %     [~,zc]=step(t,z,tc-t,Ptype_old);            % step to crossing
+            % 
+            %     % perform tentative step from zc tc
+            % 
+            %     [~,z_pred]=step(tc,zc,t+h-tc,Ptype_old);    % predictive step
+            % 
+            %     [~,~,Sp_p]=MARGO_param(norm(z_pred(1:3)));
+            %     if Sp_p<prob.Plim(2)
+            %         Ptype_p='med';
+            %     else
+            %         Ptype_p='max';
+            %     end
+            % 
+            %     if ~strcmp(Ptype,Ptype_old) && strcmp(Ptype_p,Ptype_old)
+            %         % tangency without switch
+            % 
+            %         tout=[tout; tc; t+h];
+            %         xout=[xout; zc.'; z_pred.'];
+            % 
+            %         t=t+h;
+            %         z=z_pred;
+            % 
+            %     else
+            % 
+            %         rc=zc(1:3);
+            %         vc=zc(4:6);
+            % 
+            %         dzc_m=TO_2BP_SEP(tc,zc,Ptype_old);
+            %         dzc_p=TO_2BP_SEP(tc,zc,Ptype);
+            % 
+            %         Psi=eye(14)+(dzc_p(1:14)-dzc_m(1:14))*[rc.',zeros(1,11)]./dot(rc,vc);
+            % 
+            %         h=tc-t;
+            %         t=tc;
+            %         z=zc;
+            %         zp=z;
+            % 
+            %         Phi_m=reshape(z(15:210),[14,14]);
+            %         Phi_p=Psi*Phi_m;
+            %         zp(15:210)=reshape(Phi_p,[14*14,1]);
+            % 
+            %         tout = [tout; t; t];
+            %         xout = [xout; z.'; zp.'];
+            % 
+            %         z=zp;
+            % 
+            %         Ptype_old=Ptype;
+            % 
+            %     end
+            % 
+            %     crossing=1;  
+            % 
+            %     %----end switch block     
+            % 
+            % else    % no switching detected
         
                 t = t + h;
                 z = x8; 
@@ -228,7 +228,7 @@ function [tout,xout] = TO_ode87(prob,tspan,z0)
 
                 crossing = 0;
 
-            end
+            % end
     
         else
     
