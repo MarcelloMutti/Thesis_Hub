@@ -49,7 +49,7 @@ LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
 % t0 Continuation
-TO_prob=TO_t0CONT(TO_prob);
+TO_prob=TO_CONT(TO_prob);
 
 % %-AUX solution attempt-----------------------------------------------------
 % 
