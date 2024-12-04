@@ -42,7 +42,6 @@ t_wc=cspice_str2et(str_wc); % [9131.5 mjd2000]
 
 TO_prob=struct_assembly(targ,[t_wo t_wc],m0,[Pmin Pmax],isFO);
 
-% TO_SEP_sym_dyn2(TO_prob);
 % TO_SEP_sym_dyn(TO_prob); % to KEEP
 addpath('TO_dyn')
 
@@ -50,7 +49,7 @@ LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
 % t0 Continuation
-TO_prob=TO_t0CONT(TO_prob);
+TO_prob=TO_CONT(TO_prob);
 
 % %-AUX solution attempt-----------------------------------------------------
 % 

@@ -326,9 +326,9 @@ function plot3D(t0,tt,zz,targ,u)
     L=length(u);
     
     figure
-    plot3(zz(1,1),zz(1,2),zz(1,3),'ob')
+    plot3(rr_SEL2(1,1),rr_SEL2(2,1),rr_SEL2(3,1),'ob')
     hold on
-    plot3(zz(end,1),zz(end,2),zz(end,3),'kx')
+    plot3(rrt(1,end),rrt(2,end),rrt(3,end),'kx')
     plot3(0,0,0,'+k')
     plot3(rr_SEL2(1,:),rr_SEL2(2,:),rr_SEL2(3,:),'color',[.8 .8 .8],'LineWidth',0.1)
     plot3(rrt(1,:),rrt(2,:),rrt(3,:),'color',[.8 .8 .8],'LineWidth',0.1)

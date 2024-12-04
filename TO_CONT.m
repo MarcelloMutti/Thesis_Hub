@@ -1,4 +1,4 @@
-function [prob] = TO_t0CONT(prob)
+function [prob] = TO_CONT(prob)
 
     fsopt=optimoptions('fsolve','Display','iter-detailed','SpecifyObjectiveGradient',true,'OptimalityTolerance',1e-8,'FunctionTolerance',1e-8,'MaxIterations',2e2);
 
@@ -13,8 +13,10 @@ function [prob] = TO_t0CONT(prob)
     prob(it).t0=t_wo;
 
     Dt_max=5; % [days]
+    Dt_min=3/24; % [days]
     Dt_iter=86400;
     N=25;
+    nang=0;
 
     while prob(it).t0<t_wc
 
@@ -82,10 +84,10 @@ function [prob] = TO_t0CONT(prob)
 
             while ex_flag<=0
 
-                Dt_atmp=Dt_iter/(2^(f-1));
+                Dt_atmp=max(Dt_iter/(2^(f-1)),Dt_min);
                 prob(it).t0=prob(it-1).t0+Dt_atmp;
 
-                if rem(f,2)==1 % attempt 0NPCM (alternates with act)
+                if rem(f,2)==1 && ~nang % attempt 0NPCM (alternates with act)
 
                     lltf_g=[prob(it-1).y0(8:14); prob(it-1).tf_ad];        
                    
@@ -95,8 +97,12 @@ function [prob] = TO_t0CONT(prob)
 
                 end
 
-                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
-
+                if anynan(lltf_g)
+                    nang=1;
+                    ex_flag=0;
+                else
+                    [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
+                end
                 
 
                 df=TO_ZFP(lltf_TO,prob(it));
@@ -117,20 +123,20 @@ function [prob] = TO_t0CONT(prob)
 
             while ex_flag<=0
 
-                Dt_atmp=Dt_iter/(2^(f-1));
+                Dt_atmp=max(Dt_iter/(2^(f-1)),Dt_min);
                 prob(it).t0=min(prob(it-1).t0+Dt_atmp,t_wc);
 
-                if rem(f,4)==1 % attempt 1NPCM
+                if rem(f,4-(it<4)-(it<5))==1 && ~nang % attempt 1NPCM
 
                     lltf_g=[prob(it-1).y0(8:14); prob(it-1).tf_ad]+(prob(it).t0-prob(it-1).t0)*([prob(it-1).y0(8:14); prob(it-1).tf_ad]-[prob(it-2).y0(8:14); prob(it-2).tf_ad])/(prob(it-1).t0-prob(it-2).t0);            
                    
-                elseif rem(f,4)==2 && it>=4 % attempt 2NPCM
+                elseif rem(f,4-(it<5))==2 && it>=4 && ~nang % attempt 2NPCM
 
                     yy=[prob(it-3:it-1).y0];
                     ll=yy(8:14,:);
                     lltf_g=makima([prob(it-3:it-1).t0],[ll; prob(it-3:it-1).tf_ad],prob(it).t0);
 
-                elseif rem(f,4)==3 && it>=5 % attempt 3NPCM
+                elseif rem(f,4)==3 && it>=5 && ~nang % attempt 3NPCM
 
                     yy=[prob(it-4:it-1).y0];
                     ll=yy(8:14,:);
@@ -142,8 +148,12 @@ function [prob] = TO_t0CONT(prob)
 
                 end
 
-                [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
-
+                if anynan(lltf_g)
+                    nang=1;
+                    ex_flag=0;
+                else
+                    [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
+                end
                 
 
                 df=TO_ZFP(lltf_TO,prob(it));
@@ -161,6 +171,8 @@ function [prob] = TO_t0CONT(prob)
         [~,~,prob(it)]=TO_ZFP(lltf_TO,prob(it));
 
         prob(it)=DispRes(prob(it),0);
+
+        nang=0;
 
         if prob(it).t0<t_wc
             prob(it+1)=prob(it);
