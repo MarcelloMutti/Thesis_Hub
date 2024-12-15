@@ -9,8 +9,8 @@ TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 addpath('TO_dyn')
 addpath('FO_dyn')
 
-load("2011TOs_cp.mat")
-load("2011RKs_EO_cp.mat")
+load("2000TOs_cp.mat")
+load("2000RKs_EO_cp_alt.mat")
 
 FOTO_prob=prob([prob.isTO]==1);
 %%
@@ -35,9 +35,9 @@ g_std=std(gM,1,1);
 
 figure
 subplot(3,1,1)
-plot(et2MJD2000([TO_prob.t0]),gL,'--r')
+semilogy(et2MJD2000([TO_prob.t0]),gL,'--r')
 hold on
-plot(et2MJD2000([TO_prob.t0]),g,'-ob')
+semilogy(et2MJD2000([TO_prob.t0]),g,'-ob')
 hold off
 legend('$$\gamma_L$$','$$\gamma$$','interpreter','latex','location','best','fontsize',15)
 grid on
@@ -50,18 +50,18 @@ grid on
 grid minor
 axis tight
 subplot(3,1,3)
-plot(et2MJD2000([TO_prob.t0]),g./gL,'-ob')
+semilogy(et2MJD2000([TO_prob.t0]),g./gL,'-ob')
 legend('$$\frac{\gamma}{\gamma_L}$$','interpreter','latex','location','best','fontsize',15)
 grid on
 grid minor
 axis tight
 
-ì%%
+%%
 % FOTO constraint violation
 df_FOTO=sqrt(sum([FOTO_prob.gamma].^2,1));
 
 % multiples of gL
-k=[1*(1+[-1e-1 -1e-5 -1e-10 -eps 0 eps 1e-10 1e-5 1e-1]) 2];
+k=[1*(1+[-1e-1 -1e-5 -1e-10 0 1e-10 1e-5 1e-1]) 2];
 
 df_FOTO_test=zeros(length(k),length(gL));
 
@@ -71,7 +71,7 @@ for i=1:length(k)
         df_FOTO_test(i,j)=norm(gamma_test);
     end
 end
-%%
+
 lw=0.5*ones(size(k))+1.5*(k==1)+1.5*(k==2);
 df_FOTO_test_m=mean(df_FOTO_test,2);
 df_FOTO_test_std=std(df_FOTO_test,1,2);

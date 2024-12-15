@@ -85,6 +85,9 @@ TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
 load('2014TOs_cp.mat');
 
-EO_prob=FO_CONT(FO_prob,TO_prob);
+EO_prob=FO_CONT(FO_prob,TO_prob);     % EO + E2F cont scheme
+EO_prob=FO_CONT_alt(FO_prob,TO_prob); % alt EO + E2F cont scheme
 
+% ep=0;
+% K=CP_gamma_test(FO_prob,TO_prob,ep);   % EFOTO solution test
 

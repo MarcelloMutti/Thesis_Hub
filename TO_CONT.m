@@ -101,11 +101,11 @@ function [prob] = TO_CONT(prob)
                     nang=1;
                     ex_flag=0;
                 else
-                    [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
+                    [lltf_TO,df,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
                 end
                 
 
-                df=TO_ZFP(lltf_TO,prob(it));
+                % df=TO_ZFP(lltf_TO,prob(it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -152,11 +152,11 @@ function [prob] = TO_CONT(prob)
                     nang=1;
                     ex_flag=0;
                 else
-                    [lltf_TO,~,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
+                    [lltf_TO,df,ex_flag]=fsolve(@(llt) TO_ZFP(llt,prob(it)),lltf_g,fsopt);
                 end
                 
 
-                df=TO_ZFP(lltf_TO,prob(it));
+                % df=TO_ZFP(lltf_TO,prob(it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -200,31 +200,5 @@ function [prob] = TO_CONT(prob)
     fprintf('\n')
 
     close(wb2);
-
-%     figure
-%     plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
-%     grid on
-%     grid minor
-%     axis tight
-%     ylim([100 1100])
-%     title('tf')
-% 
-%     s=length(prob);
-%     id=[1:10:s, s];
-% 
-%     figure
-%     for i=id
-%         plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
-%         view([55, 55])
-%         hold on
-%         plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
-%         plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
-%         plot3(0,0,0,'+k')
-%     end
-%     grid on
-%     grid minor
-%     xlabel('$x [AU]$')
-%     ylabel('$y [AU]$')
-%     zlabel('$z [AU]$')
 
 end

@@ -38,6 +38,9 @@ figure
 plot([prob.tf_ad]*TU/86400,[prob.mp],'.','LineWidth',2)
 hold on
 plot([prob(isPareto).tf_ad]*TU/86400,[prob(isPareto).mp],'xk','LineWidth',2)
+% for i=1:length(TO_prob)
+%     plot([prob([prob.t0]==TO_prob(i).t0).tf_ad]*TU/86400,[prob([prob.t0]==TO_prob(i).t0).mp],'--b')
+% end
 grid on
 grid minor
 axis tight
