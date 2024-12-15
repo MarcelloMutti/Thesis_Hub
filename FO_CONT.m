@@ -61,9 +61,9 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
                 llg=ACT(prob(it));
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
+                [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
 
-                df=FO_ZFP(ll_FO,prob(it));
+                % df=FO_ZFP(ll_FO,prob(it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -94,9 +94,9 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
                 end
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);                
+                [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);                
 
-                df=FO_ZFP(ll_FO,prob(it));
+                % df=FO_ZFP(ll_FO,prob(it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -136,10 +136,10 @@ function [prob] = EO_t0CONT(prob,TO_ref)
 
                 end
 
-                [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
+                [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
                 
 
-                df=FO_ZFP(ll_FO,prob(it));
+                % df=FO_ZFP(ll_FO,prob(it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -162,108 +162,12 @@ function [prob] = EO_t0CONT(prob,TO_ref)
         prob(it)=DispRes(prob(it),0);
 
         wb1=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb1,sprintf('EO t0 continuation [%.2f %%]',(prob(it).t0-t_wo)/(t_wc-t_wo)*100));
-
-%         if it==2
-%             prob(1)=E2F_CONT(prob(1),1,1);
-%             prob(2)=E2F_CONT(prob(2),1,1);
-%         end
-% 
-% 
-% 
-% 
-%         if it==1   % EO -> FO
-% 
-%             de=0.05;
-%             
-%             while prob(it).epsilon~=0
-% 
-%                 ex_flag=0;
-%                 f=1;
-% %                 de=0.05;
-%                 ep=prob(it).epsilon;
-%     
-%                 while ex_flag<=0
-% 
-%                     prob(it).epsilon=max(ep-de/(2^(f-1)),0);
-%     
-%                     llg=prob(it).y0(8:14);
-%         
-%                     [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),llg,fsopt);
-%                         
-%         
-%                     df=FO_ZFP(ll_FO,prob(it));
-%         
-%                     if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
-%                         ex_flag=0;
-%                     end
-%         
-%                     f=f+1;
-%     
-%                 end
-% 
-%                 [~,~,prob(it)]=FO_ZFP(ll_FO,prob(it));
-% 
-%                 prob(it)=DispRes(prob(it),0);
-% 
-%             end
-%     
-%             
-%         end
-% 
-%         if prob(it).t0<t_wc
-%             prob(it+1)=prob(it);
-%             
-%             if it~=1
-%                 Dt_iter=Dt_atmp;
-% 
-%                 if (f-1)==1
-%                     Dt_iter=min(1.1*Dt_iter,Dt_max*86400);
-%                 end
-%             end
-% 
-%             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb2,'TO continuation');
-% 
-%             it=it+1;
-%             
-%         end
-
-
-
-        
-
-
         
     end
 
     fprintf('\n')
 
     close(wb1);
-
-%     figure
-%     plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
-%     grid on
-%     grid minor
-%     axis tight
-%     ylim([100 1100])
-%     title('tf')
-% 
-%     s=length(prob);
-%     id=[1:10:s, s];
-% 
-%     figure
-%     for i=id
-%         plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
-%         view([55, 55])
-%         hold on
-%         plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
-%         plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
-%         plot3(0,0,0,'+k')
-%     end
-%     grid on
-%     grid minor
-%     xlabel('$x [AU]$')
-%     ylabel('$y [AU]$')
-%     zlabel('$z [AU]$')
 
 end
 
@@ -297,7 +201,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             while ex_flag<=0
                 
-                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(id).tf_ad-(Dt_max/(2^(f-1)))*86400/TU);
+                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(id).tf_ad-max(Dt_min,(Dt_max/(2^(f-1))))*86400/TU);
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
                 if rem(f,2)==1 && ~nang % attempt 0NPCM (alternates with act)
@@ -314,10 +218,10 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                     nang=1;
                     ex_flag=0;
                 else
-                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
+                    [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
                 end
 
-                df=FO_ZFP(ll_FO,prob(L+it));
+                % df=FO_ZFP(ll_FO,prob(L+it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -332,46 +236,6 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             end
 
-
-             
-%             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
-% 
-%         elseif it==2    %-0NPCM--------------------------------------------
-%             
-%             tic
-% 
-%             ex_flag=0;
-%             f=1;
-% 
-%             while ex_flag<=0
-% 
-%                 Dt_atmp=Dt_iter/(2^(f-1));
-%                 prob(it).t0=prob(it-1).t0+Dt_atmp;
-% 
-%                 if rem(f,2)==1 % attempt 0NPCM (alternates with act)
-% 
-%                     ll_g=[prob(it-1).y0(8:14); prob(it-1).tf_ad];        
-%                    
-%                 else    % ACT
-% 
-%                     ll_g=[ACT(prob(it)); prob(it-1).tf_ad];
-% 
-%                 end
-% 
-%                 [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),ll_g,fsopt);
-% 
-%                 
-% 
-%                 df=FO_ZFP(ll_FO,prob(it));
-% 
-%                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
-%                     ex_flag=0;
-%                 end
-% 
-%                 f=f+1;
-% 
-%             end
-
         elseif it==2
 
             ex_flag=0;
@@ -379,7 +243,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             while ex_flag<=0
 
-                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-DT/(2^(f-1)));
+                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-max(Dt_min*86400/TU,DT/(2^(f-1))));
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
                 if rem(f,2)==1 && ~nang % attempt 1NPCM
@@ -396,10 +260,10 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                     nang=1;
                     ex_flag=0;
                 else
-                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
+                    [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
                 end                
 
-                df=FO_ZFP(ll_FO,prob(L+it));
+                % df=FO_ZFP(ll_FO,prob(L+it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -421,7 +285,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
             while ex_flag<=0
 
-                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-DT/(2^(f-1)));
+                prob(L+it).tf_ad=max(TO_ref(id).tf_ad,prob(L+it-1).tf_ad-max(Dt_min*86400/TU,DT/(2^(f-1))));
                 prob(L+it).tf=prob(L+it).tf_ad*TU+prob(L+it).t0;
 
                 if rem(f,4-(it<3)-(it<4))==1 && ~nang % attempt 1NPCM
@@ -450,10 +314,10 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                     nang=1;
                     ex_flag=0;
                 else
-                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
+                    [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(L+it)),ll_g,fsopt);       
                 end                
 
-                df=FO_ZFP(ll_FO,prob(L+it));
+                % df=FO_ZFP(ll_FO,prob(L+it));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -503,62 +367,13 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
         wb1=waitbar((prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad),wb1,sprintf('EO tf continuation [%.2f %%] of %.0f/%.0f',(prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad)*100,id,length(TO_ref)));
 
         it=it+1;
-            
-%             if it~=1
-%                 Dt_iter=Dt_atmp;
-% 
-%                 if (f-1)==1
-%                     Dt_iter=min(1.1*Dt_iter,Dt_max*86400);
-%                 end
-%             end
-% 
-%             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),wb2,'TO continuation');
-% 
-%             it=it+1;
-%             
-%         end
-
-        
-
-
         
     end
 
     fprintf('\n')
 
     close(wb1);
-
-% 
-%     figure
-%     plot(et2MJD2000([prob.t0]),[prob.tf_ad]*TU/86400,'linewidth',2)
-%     grid on
-%     grid minor
-%     axis tight
-%     ylim([100 1100])
-%     title('tf')
-% 
-%     s=length(prob);
-%     id=[1:10:s, s];
-% 
-%     figure
-%     for i=id
-%         plot3(prob(i).zz(:,1),prob(i).zz(:,2),prob(i).zz(:,3),'color',[.7 .7 .7])
-%         view([55, 55])
-%         hold on
-%         plot3(prob(i).zz(1,1),prob(i).zz(1,2),prob(i).zz(1,3),'ob')
-%         plot3(prob(i).zz(end,1),prob(i).zz(end,2),prob(i).zz(end,3),'kx')
-%         plot3(0,0,0,'+k')
-%     end
-%     grid on
-%     grid minor
-%     xlabel('$x [AU]$')
-%     ylabel('$y [AU]$')
-%     zlabel('$z [AU]$')
-% 
-%     toc
-
-
-    
-    
+   
 
 end
+

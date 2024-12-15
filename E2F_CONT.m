@@ -52,10 +52,10 @@ function prob = E2F_CONT(prob,id,L)
                     nang=1;
                     ex_flag=0;
                 else
-                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it+1)),ll_g,fsopt);
+                    [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it+1)),ll_g,fsopt);
                 end                
 
-                df=FO_ZFP(ll_FO,prob(it+1));
+                % df=FO_ZFP(ll_FO,prob(it+1));
 
                 if (norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3) && prob(it+1).epsilon==0
                     ex_flag=0;
@@ -65,83 +65,6 @@ function prob = E2F_CONT(prob,id,L)
 
             end
 
-
-             
-%             wb2=waitbar((prob(it).t0-t_wo)/(t_wc-t_wo),'Initiating continuation');
-% 
-%         elseif it==2    %-0NPCM--------------------------------------------
-%             
-%             tic
-% 
-%             ex_flag=0;
-%             f=1;
-% 
-%             while ex_flag<=0
-% 
-%                 Dt_atmp=Dt_iter/(2^(f-1));
-%                 prob(it).t0=prob(it-1).t0+Dt_atmp;
-% 
-%                 if rem(f,2)==1 % attempt 0NPCM (alternates with act)
-% 
-%                     ll_g=[prob(it-1).y0(8:14); prob(it-1).tf_ad];        
-%                    
-%                 else    % ACT
-% 
-%                     ll_g=[ACT(prob(it)); prob(it-1).tf_ad];
-% 
-%                 end
-% 
-%                 [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),ll_g,fsopt);
-% 
-%                 
-% 
-%                 df=FO_ZFP(ll_FO,prob(it));
-% 
-%                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
-%                     ex_flag=0;
-%                 end
-% 
-%                 f=f+1;
-% 
-%             end
-% 
-%         elseif it==2
-% 
-%             ex_flag=0;
-%             f=1;
-%             E=prob(it).epsilon;
-% 
-%             while ex_flag<=0
-% 
-%                 prob(it).epsilon=E-DE/(2^(f-1));
-% 
-%                 if rem(f,2)==1 % attempt 1NPCM
-% 
-%                     ll_g=prob(it-1).y0(8:14)+(prob(it).tf_ad-prob(it-1).tf_ad)*(prob(it-1).y0(8:14)-prob(id).y0(8:14))/(prob(it-1).tf_ad-prob(id).tf_ad);            
-%                    
-%                 else    % ACT
-% 
-%                     ll_g=ACT(prob(it));
-% 
-%                 end
-% 
-%                 [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it)),ll_g,fsopt);
-%                 
-% 
-%                 df=FO_ZFP(ll_FO,prob(it));
-% 
-%                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
-%                     ex_flag=0;
-%                 end
-%                 if prob(it).tf_ad-TO_ref(id).tf_ad<Dt_max*86400/TU && f>10
-%                     ex_flag=1;
-%                     skip=1;
-%                 end
-%                 
-% 
-%                 f=f+1;
-% 
-%             end
 
         else    %-1-3NPCM--------------------------------------------------
 
@@ -183,11 +106,11 @@ function prob = E2F_CONT(prob,id,L)
                     nang=1;
                     ex_flag=0;
                 else
-                    [ll_FO,~,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it+1)),ll_g,fsopt);
+                    [ll_FO,df,ex_flag]=fsolve(@(ll) FO_ZFP(ll,prob(it+1)),ll_g,fsopt);
                 end
                 
 
-                df=FO_ZFP(ll_FO,prob(it+1));
+                % df=FO_ZFP(ll_FO,prob(it+1));
 
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
@@ -238,33 +161,6 @@ function prob = E2F_CONT(prob,id,L)
 
     close(wb1);
 
-%     YY0=[prob.y0];
-%     DM=abs([prob(2:end).mp]-[prob(1:end-1).mp]);
-%     LL0=YY0(8:14,:);
-%     L=arrayfun(@(s) length(s.S),prob(2:end));
-%     DY=max(abs(LL0(:,2:end)-LL0(:,1:end-1)));
-%     figure
-%     subplot(3,1,1)
-%     loglog([prob(2:end).epsilon],DY,'-o')
-%     grid on
-%     grid minor
-%     axis tight
-%     xlabel('$$\varepsilon_i$$','interpreter','latex')
-%     ylabel('$$\|\Delta \lambda_i\|_{\inf}$$','interpreter','latex')
-%     subplot(3,1,2)
-%     loglog([prob(2:end).epsilon],L,'-o')
-%     grid on
-%     grid minor
-%     axis tight
-%     xlabel('$$\varepsilon_i$$','interpreter','latex')
-%     ylabel('$$N_{it}$$','interpreter','latex')
-%     subplot(3,1,3)
-%     loglog([prob(2:end).epsilon],DM,'-o')
-%     grid on
-%     grid minor
-%     axis tight
-%     xlabel('$$\varepsilon_i$$','interpreter','latex')
-%     ylabel('$$\|\Delta m_{p,i}\|_{\inf}$$','interpreter','latex')
 
     if skip==0
         prob=prob(end);
