@@ -10,16 +10,15 @@ function [prob]=FO_CONT(prob,TO_ref)
 
         prob=EO_tfCONT(prob,TO_ref,id);
         prob(end).isTO=1;
-        prob(end)=E2F_CONT(prob(end),id,L);
+        % prob(end)=E2F_CONT(prob(end),id,L);
 
     end
 
-    % for i=1:length(prob)
-    %     prob(i)=E2F_CONT(prob(i),i,length(prob));
-    % end
+    for i=1:length(prob)
+        prob(i)=E2F_CONT(prob(i),i,length(prob));
+    end
 
 end
-
 
 function [prob] = EO_t0CONT(prob,TO_ref)
 
@@ -323,7 +322,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
                 if norm(df(1:3))*LU>10 || norm(df(4:6))*LU/TU>1e-3
                     ex_flag=0;
                 end
-                if prob(L+it).tf_ad-TO_ref(id).tf_ad<Dt_min*86400/TU && f>10
+                if prob(L+it).tf_ad-TO_ref(id).tf_ad<Dt_max*86400/TU && f>10
                     ex_flag=1;
                     skip=1;
                 end
@@ -349,6 +348,8 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
 
         nang=0;
 
+        wb1=waitbar((prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad),wb1,sprintf('EO tf continuation [%.2f %%] of %.0f/%.0f',(prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad)*100,id,length(TO_ref)));
+
         if prob(L+it).tf_ad==TO_ref(id).tf_ad
 
             iscomplete=1;
@@ -363,10 +364,7 @@ function [prob]=EO_tfCONT(prob,TO_ref,id)
             prob(end).sts='skp';
 
         end
-
         
-        wb1=waitbar((prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad),wb1,sprintf('EO tf continuation [%.2f %%] of %.0f/%.0f',(prob(id).tf_ad-prob(L+it).tf_ad)/(prob(id).tf_ad-TO_ref(id).tf_ad)*100,id,length(TO_ref)));
-
         it=it+1;
         
     end
