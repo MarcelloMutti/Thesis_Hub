@@ -151,17 +151,91 @@ function [prob] = DispRes(prob,output)
     
         fprintf('Departure date: %s (%.1f MJD2000)\n',cspice_et2utc(t0,'C',0),et2MJD2000(t0))
         fprintf('Arrival date: %s (%.1f MJD2000)\n',cspice_et2utc(tf,'C',0),et2MJD2000(tf))
-        fprintf('ToF: %.3f days, Final Mass: %.3f kg, Propellant Mass: %.3f kg\n\n',ToF,mf,mp)
+        fprintf('ToF: %.4f days, Final Mass: %.4f kg, Propellant Mass: %.4f kg\n\n',ToF,mf,mp)
     
-        fprintf('Position error %.3e km\nVelocity error %.3e km/s\n',norm(df(1:3))*LU, norm(df(4:6))*LU/TU)
+        fprintf('Position error %.4e km\nVelocity error %.4e km/s\n',norm(df(1:3))*LU, norm(df(4:6))*LU/TU)
 
-        fprintf('Max relative Hamiltonian variation %.3e%%\n\n',abs((max(H)-min(H))/max(H))*100)
+        fprintf('Max relative Hamiltonian variation %.4e%%\n\n',abs((max(H)-min(H))/max(H))*100)
     
 
-        figure
+        % figure
+        % 
+        % %-throttle---------------------------------------------------------
+        % subplot(4,2,3)
+        % plot(ttd,u)
+        % axis tight
+        % ylim([0 1.1])
+        % ylabel('$u$')
+        % grid on
+        % grid minor
+        % 
+        % %-switching-function-----------------------------------------------
+        % subplot(4,2,5)
+        % plot(ttd,Se)
+        % axis tight
+        % ylabel('$S$')
+        % grid on
+        % grid minor
+        % 
+        % %-mass-------------------------------------------------------------
+        % subplot(4,2,7)
+        % plot(ttd,zz(:,7)*m0)
+        % axis tight
+        % ylabel('$m\,[kg]$')
+        % grid on
+        % grid minor
+        % 
+        % %-input-power------------------------------------------------------
+        % subplot(4,2,4)
+        % plot(ttd,P)
+        % if max(P)>Pmax
+        %     hold on
+        %     plot([ttd(1) ttd(end)],[Pmax,Pmax],'r')
+        % end
+        % if min(P)<Pmin
+        %     hold on
+        %     plot([ttd(1) ttd(end)],[Pmin,Pmin],'r')
+        % end
+        % axis tight
+        % ylabel('$P_{in}\,[W]$')
+        % grid on
+        % grid minor
+        % 
+        % %-thrust-----------------------------------------------------------
+        % subplot(4,2,6)
+        % plot(ttd,II)
+        % axis tight
+        % ylabel('$I_{sp}\,[s]$')
+        % grid on
+        % grid minor
+        % 
+        % %-specific-impulse-------------------------------------------------
+        % subplot(4,2,8)
+        % plot(ttd,TT)
+        % axis tight
+        % ylabel('$T_{max}\,[mN]$')
+        % grid on
+        % grid minor
+        % 
+        % %-hamiltonian------------------------------------------------------
+        % subplot(4,2,1)
+        % plot(ttd,H)
+        % axis tight
+        % ylabel('H')
+        % grid on
+        % grid minor
+        % 
+        % subplot(4,2,2)
+        % plot(ttd,H)
+        % axis tight
+        % ylabel('H')
+        % grid on
+        % grid minor
+
+        % figure
 
         %-throttle---------------------------------------------------------
-        subplot(4,2,3)
+        subplot(3,3,2)
         plot(ttd,u)
         axis tight
         ylim([0 1.1])
@@ -170,7 +244,7 @@ function [prob] = DispRes(prob,output)
         grid minor
 
         %-switching-function-----------------------------------------------
-        subplot(4,2,5)
+        subplot(3,3,5)
         plot(ttd,Se)
         axis tight
         ylabel('$S$')
@@ -178,89 +252,16 @@ function [prob] = DispRes(prob,output)
         grid minor
             
         %-mass-------------------------------------------------------------
-        subplot(4,2,7)
+        subplot(3,3,8)
         plot(ttd,zz(:,7)*m0)
         axis tight
         ylabel('$m\,[kg]$')
+        xlabel('$t\,[days]$')
         grid on
         grid minor
 
         %-input-power------------------------------------------------------
-        subplot(4,2,4)
-        plot(ttd,P)
-        if max(P)>Pmax
-            hold on
-            plot([ttd(1) ttd(end)],[Pmax,Pmax],'r')
-        end
-        if min(P)<Pmin
-            hold on
-            plot([ttd(1) ttd(end)],[Pmin,Pmin],'r')
-        end
-        axis tight
-        ylabel('$P_{in}\,[W]$')
-        grid on
-        grid minor
-
-        %-thrust-----------------------------------------------------------
-        subplot(4,2,6)
-        plot(ttd,II)
-        axis tight
-        ylabel('$I_{sp}\,[s]$')
-        grid on
-        grid minor
-    
-        %-specific-impulse-------------------------------------------------
-        subplot(4,2,8)
-        plot(ttd,TT)
-        axis tight
-        ylabel('$T_{max}\,[mN]$')
-        grid on
-        grid minor
-
-        %-hamiltonian------------------------------------------------------
-        subplot(4,2,1)
-        plot(ttd,H)
-        axis tight
-        ylabel('H')
-        grid on
-        grid minor
-        
-        subplot(4,2,2)
-        plot(ttd,H)
-        axis tight
-        ylabel('H')
-        grid on
-        grid minor
-
-        figure
-
-        %-throttle---------------------------------------------------------
-        subplot(3,2,1)
-        plot(ttd,u)
-        axis tight
-        ylim([0 1.1])
-        ylabel('$u$')
-        grid on
-        grid minor
-
-        %-switching-function-----------------------------------------------
-        subplot(3,2,3)
-        plot(ttd,Se)
-        axis tight
-        ylabel('$S$')
-        grid on
-        grid minor
-            
-        %-mass-------------------------------------------------------------
-        subplot(3,2,5)
-        plot(ttd,zz(:,7)*m0)
-        axis tight
-        ylabel('$m\,[kg]$')
-        grid on
-        grid minor
-
-        %-input-power------------------------------------------------------
-        subplot(3,2,2)
+        subplot(3,3,3)
         plot(ttd,P)
         if max(P)>Pmax
             hold on
@@ -271,12 +272,12 @@ function [prob] = DispRes(prob,output)
             plot([ttd(1) ttd(end)],[Pmin,Pmin],'--r','LineWidth',1)
         end
         axis tight
-        ylabel('$P_{in}\,[W]$')
+        ylabel('$S_{p}\,[W]$')
         grid on
         grid minor
 
         %-thrust-----------------------------------------------------------
-        subplot(3,2,4)
+        subplot(3,3,6)
         plot(ttd,II)
         axis tight
         ylabel('$I_{sp}\,[s]$')
@@ -284,10 +285,11 @@ function [prob] = DispRes(prob,output)
         grid minor
     
         %-specific-impulse-------------------------------------------------
-        subplot(3,2,6)
+        subplot(3,3,9)
         plot(ttd,TT)
         axis tight
         ylabel('$T_{max}\,[mN]$')
+        xlabel('$t\,[days]$')
         grid on
         grid minor
         
@@ -326,6 +328,7 @@ function plot3D(t0,tt,zz,targ,u)
     L=length(u);
     
     figure
+    subplot(3,3,[1,4,7])
     plot3(rr_SEL2(1,1),rr_SEL2(2,1),rr_SEL2(3,1),'ob')
     hold on
     plot3(rrt(1,end),rrt(2,end),rrt(3,end),'kx')
@@ -341,16 +344,16 @@ function plot3D(t0,tt,zz,targ,u)
     %         quiver3(zz(i,1),zz(i,2),zz(i,3),th(1),th(2),th(3),'color',[u(i) 0 1-u(i)])
     %     end
     % end
-    view([55, 55])    
+    view([45, 15])    
     xlim([-1.5 1.5])
     ylim([-1.5 1.5])
 
-%     sp=get(gca,'DataAspectRatio');
-%     if sp(3)==1
-%           set(gca,'DataAspectRatio',[1 1 1/max(sp(1:2))])
-%     else
-%           set(gca,'DataAspectRatio',[1 1 sp(3)])
-%     end
+    % sp=get(gca,'DataAspectRatio');
+    % if sp(3)==1
+    %       set(gca,'DataAspectRatio',[1 1 1/max(sp(1:2))])
+    % else
+    %       set(gca,'DataAspectRatio',[1 1 sp(3)])
+    % end
 
     grid on
     grid minor
@@ -358,6 +361,7 @@ function plot3D(t0,tt,zz,targ,u)
     xlabel('$x [AU]$')
     ylabel('$y [AU]$')
     zlabel('$z [AU]$')
-    legend('SEL2','AST','Sun')
+    legend('SEL2', 'AST', 'Sun','Location','northeast');
+    % set(lgd, 'Units', 'normalized', 'Position', [0.680436159711485,0.719411446041471,0.045377680577029,0.094222464288542]);
 
 end
