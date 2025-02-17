@@ -6,7 +6,7 @@ fprintf('\nTOTAL kernels number: %d\n', cspice_ktotal('ALL'));
 LU=cspice_convrt(1,'AU','KM');              % 1AU [km]
 TU=sqrt(LU^3/cspice_bodvrd('Sun','GM',1));  % mu_S=1
 
-% 2000
+%% 2000
 load("CP_res\CP_2000FO.mat")
 load("CP_res\CP_2000TO.mat")
 
@@ -19,12 +19,16 @@ TOr_prob=TO_prob(find(ismember([TO_prob.t0],[ITO_prob.t0])));
 
 t01=et2MJD2000([TOr_prob.t0]);
 DF1=zeros(3,length(ITO_prob));
+% DF1t=zeros(3,length(ITO_prob));
 for i=1:length(ITO_prob)
     g=mean(ITO_prob(i).y0(8:14)./TOr_prob(i).y0(8:14));
     df=FO_ZFP(g*TOr_prob(i).y0(8:14),ITO_prob(i));
     DF1(1,i)=norm(df(1:3))*LU;
     DF1(2,i)=norm(df(4:6))*LU/TU;
     DF1(3,i)=abs(df(7));
+    % DF1t(1,i)=norm(TOr_prob(i).gamma(1:3))*LU;
+    % DF1t(2,i)=norm(TOr_prob(i).gamma(4:6))*LU/TU;
+    % DF1t(3,i)=abs(TOr_prob(i).gamma(7));
 end
 
 %% 2010
@@ -40,17 +44,21 @@ TOr_prob=TO_prob(find(ismember([TO_prob.t0],[ITO_prob.t0])));
 
 t02=et2MJD2000([TOr_prob.t0]);
 DF2=zeros(3,length(ITO_prob));
+% DF2t=zeros(3,length(ITO_prob));
 for i=1:length(ITO_prob)
     g=mean(ITO_prob(i).y0(8:14)./TOr_prob(i).y0(8:14));
     df=FO_ZFP(g*TOr_prob(i).y0(8:14),ITO_prob(i));
     DF2(1,i)=norm(df(1:3))*LU;
     DF2(2,i)=norm(df(4:6))*LU/TU;
     DF2(3,i)=abs(df(7));
+    % DF2t(1,i)=norm(TOr_prob(i).gamma(1:3))*LU;
+    % DF2t(2,i)=norm(TOr_prob(i).gamma(4:6))*LU/TU;
+    % DF2t(3,i)=abs(TOr_prob(i).gamma(7));
 end
 
 %% 2011
-load("CP_res\CP_2011FO.mat")
-load("CP_res\CP_2011TO.mat")
+load("CP_res\CP_2011FO_new.mat")
+load("CP_res\CP_2011TO_new.mat")
 
 % Non-skipped implicit TO solutions
 ITO_id=find(strcmp({EO_prob.sts},'TO'));
@@ -61,17 +69,21 @@ TOr_prob=TO_prob(find(ismember([TO_prob.t0],[ITO_prob.t0])));
 
 t03=et2MJD2000([TOr_prob.t0]);
 DF3=zeros(3,length(ITO_prob));
+% DF3t=zeros(3,length(ITO_prob));
 for i=1:length(ITO_prob)
     g=mean(ITO_prob(i).y0(8:14)./TOr_prob(i).y0(8:14));
     df=FO_ZFP(g*TOr_prob(i).y0(8:14),ITO_prob(i));
     DF3(1,i)=norm(df(1:3))*LU;
     DF3(2,i)=norm(df(4:6))*LU/TU;
     DF3(3,i)=abs(df(7));
+    % DF3t(1,i)=norm(TOr_prob(i).gamma(1:3))*LU;
+    % DF3t(2,i)=norm(TOr_prob(i).gamma(4:6))*LU/TU;
+    % DF3t(3,i)=abs(TOr_prob(i).gamma(7));
 end
 
 %% 2012
-load("CP_res\CP_2012FO.mat")
-load("CP_res\CP_2012TO.mat")
+load("CP_res\CP_2012FO_new.mat")
+load("CP_res\CP_2012TO_new.mat")
 
 % Non-skipped implicit TO solutions
 ITO_id=find(strcmp({EO_prob.sts},'TO'));
@@ -82,17 +94,21 @@ TOr_prob=TO_prob(find(ismember([TO_prob.t0],[ITO_prob.t0])));
 
 t04=et2MJD2000([TOr_prob.t0]);
 DF4=zeros(3,length(ITO_prob));
+% DF4t=zeros(3,length(ITO_prob));
 for i=1:length(ITO_prob)
     g=mean(ITO_prob(i).y0(8:14)./TOr_prob(i).y0(8:14));
     df=FO_ZFP(g*TOr_prob(i).y0(8:14),ITO_prob(i));
     DF4(1,i)=norm(df(1:3))*LU;
     DF4(2,i)=norm(df(4:6))*LU/TU;
     DF4(3,i)=abs(df(7));
+    % DF4t(1,i)=norm(TOr_prob(i).gamma(1:3))*LU;
+    % DF4t(2,i)=norm(TOr_prob(i).gamma(4:6))*LU/TU;
+    % DF4t(3,i)=abs(TOr_prob(i).gamma(7));
 end
 
 %% 2014
-load("CP_res\CP_2014FO.mat")
-load("CP_res\CP_2014TO.mat")
+load("CP_res\CP_2014FO_new.mat")
+load("CP_res\CP_2014TO_new.mat")
 
 % Non-skipped implicit TO solutions
 ITO_id=find(strcmp({EO_prob.sts},'TO'));
@@ -103,12 +119,16 @@ TOr_prob=TO_prob(find(ismember([TO_prob.t0],[ITO_prob.t0])));
 
 t05=et2MJD2000([TOr_prob.t0]);
 DF5=zeros(3,length(ITO_prob));
+% DF5t=zeros(3,length(ITO_prob));
 for i=1:length(ITO_prob)
     g=mean(ITO_prob(i).y0(8:14)./TOr_prob(i).y0(8:14));
     df=FO_ZFP(g*TOr_prob(i).y0(8:14),ITO_prob(i));
     DF5(1,i)=norm(df(1:3))*LU;
     DF5(2,i)=norm(df(4:6))*LU/TU;
     DF5(3,i)=abs(df(7));
+    % DF5t(1,i)=norm(TOr_prob(i).gamma(1:3))*LU;
+    % DF5t(2,i)=norm(TOr_prob(i).gamma(4:6))*LU/TU;
+    % DF5t(3,i)=abs(TOr_prob(i).gamma(7));
 end
 
 %%
@@ -178,3 +198,6 @@ set(groot,'defaultLegendInterpreter','remove');
 fprintf('dr range %.4e %.4e\n',min([DF1(1,:) DF2(1,:) DF3(1,:) DF4(1,:) DF5(1,:)]),max([DF1(1,:) DF2(1,:) DF3(1,:) DF4(1,:) DF5(1,:)]))
 fprintf('dv range %.4e %.4e\n',min([DF1(2,:) DF2(2,:) DF3(2,:) DF4(2,:) DF5(2,:)]),max([DF1(2,:) DF2(2,:) DF3(2,:) DF4(2,:) DF5(2,:)]))
 fprintf('dlm range %.4e %.4e\n',min([DF1(3,:) DF2(3,:) DF3(3,:) DF4(3,:) DF5(3,:)]),max([DF1(3,:) DF2(3,:) DF3(3,:) DF4(3,:) DF5(3,:)]))
+fprintf('dr mean %.4e\n',mean([DF1(1,:) DF2(1,:) DF3(1,:) DF4(1,:) DF5(1,:)]))
+fprintf('dv mean %.4e\n',mean([DF1(2,:) DF2(2,:) DF3(2,:) DF4(2,:) DF5(2,:)]))
+fprintf('dlm mean %.4e\n',mean([DF1(3,:) DF2(3,:) DF3(3,:) DF4(3,:) DF5(3,:)]))
